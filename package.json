@@ -11,7 +11,8 @@
   "type": "module",
   "scripts": {
     "dev": "rollup -c -w",
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "lint": "eslint --ext .js,.ts,.svelte src"
   },
   "dependencies": {
     "carbon-components-svelte": "^0.89.6",
@@ -20,9 +21,12 @@
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-typescript": "^12.1.4",
+    "@types/node": "^24.3.0",
     "@types/vscode": "^1.103.0",
     "carbon-preprocess-svelte": "^0.11.11",
     "eslint": "^9.34.0",
+    "eslint-plugin-svelte": "^3.12.1",
+    "neostandard": "^0.12.2",
     "prettier": "^3.6.2",
     "prettier-plugin-svelte": "^3.4.0",
     "rollup": "^4.49.0",
