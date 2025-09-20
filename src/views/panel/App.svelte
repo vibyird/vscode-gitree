@@ -1,0 +1,39 @@
+<script lang="ts">
+  import { DataTable } from 'carbon-components-svelte'
+  import type { DataTableHeader } from 'carbon-components-svelte/src/DataTable/DataTable.svelte'
+
+  const l10n = webview.l10n
+
+  interface Row {
+    id: string
+    message: string
+    authorDate: Date
+  }
+  const headers: DataTableHeader<Row>[] = [
+    { key: 'message', value: l10n.t('Commit Message') },
+    { key: 'authorDate', value: l10n.t('Commit Date') },
+  ]
+  let rows: Row[]
+
+  webview.onMessage((message) => {
+    switch (message.type) {
+      case 'commits': {
+        const data = message.data
+        rows = data.map((item) => {
+          return {
+            id: item.hash,
+            message: item.message,
+            authorDate: item.authorDate,
+          }
+        })
+        break
+      }
+    }
+  })
+
+  webview.sendMessage({
+    type: 'init',
+  })
+</script>
+
+<DataTable {headers} {rows}></DataTable>

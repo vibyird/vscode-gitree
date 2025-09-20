@@ -1,0 +1,87 @@
+{
+  "name": "gitree",
+  "version": "1.0.0",
+  "description": "git tree for vscode",
+  "engines": {
+    "vscode": "^1.103.0"
+  },
+  "keywords": [
+    "git",
+    "vscode"
+  ],
+  "author": "vibyird",
+  "license": "MIT",
+  "type": "module",
+  "main": "./extension.js",
+  "l10n": "./l10n",
+  "contributes": {
+    "commands": [
+      {
+        "category": "Gitree",
+        "command": "gitree.view",
+        "title": "%gitree.view%"
+      },
+      {
+        "category": "Gitree",
+        "command": "gitree.settings",
+        "title": "%gitree.settings%",
+        "icon": "$(gear)"
+      }
+    ],
+    "icons": {
+      "git-logo": {
+        "description": "Git Icon",
+        "default": {
+          "fontPath": "assets/icons/icons.woff",
+          "fontCharacter": "\\E900"
+        }
+      }
+    },
+    "menus": {
+      "editor/title": [
+        {
+          "command": "gitree.settings",
+          "when": "activeWebviewPanelId === gitree.panel",
+          "group": "navigation@-99"
+        }
+      ]
+    }
+  },
+  "activationEvents": [
+    "onUri",
+    "onWebviewPanel:gitree.view",
+    "onStartupFinished"
+  ],
+  "scripts": {
+    "dev": "rollup -c -w",
+    "build": "rollup -c",
+    "lint": "eslint --ext .js,.ts,.svelte src"
+  },
+  "dependencies": {
+    "@vscode/l10n": "^0.0.18",
+    "carbon-components-svelte": "^0.89.6",
+    "svelte": "^4.2.20"
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-replace": "^6.0.2",
+    "@rollup/plugin-typescript": "^12.1.4",
+    "@types/node": "^24.3.0",
+    "@types/vscode": "^1.103.0",
+    "@types/vscode-webview": "^1.57.5",
+    "carbon-preprocess-svelte": "^0.11.11",
+    "eslint": "^9.34.0",
+    "eslint-plugin-svelte": "^3.12.1",
+    "neostandard": "^0.12.2",
+    "prettier": "^3.6.2",
+    "prettier-plugin-svelte": "^3.4.0",
+    "rollup": "^4.50.2",
+    "rollup-plugin-scss": "^4.0.1",
+    "rollup-plugin-svelte": "^7.2.3",
+    "sass": "^1.91.0",
+    "svelte-preprocess": "^6.0.3",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.44.0"
+  }
+}
