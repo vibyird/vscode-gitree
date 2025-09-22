@@ -29,47 +29,46 @@ export default [
     external: ['vscode'],
   },
   {
-    input: 'src/utils/webview.ts',
+    input: 'src/utils/runtime.ts',
     output: {
       dir: 'assets',
       assetFileNames: '[name][extname]',
     },
     plugins: [
+      replaceEnv,
       resolve({ browser: true }),
       typescript(),
       scss({
-        name: 'webview.css',
+        name: 'runtime.css',
       }),
-      assets(['webview.js', 'webview.css']),
+      assets(['runtime.js', 'runtime.css']),
     ],
   },
-  ...views.map((view) => {
-    return {
-      input: `src/views/${view}/App.svelte`,
-      output: {
-        dir: 'assets',
-        assetFileNames: '[name][extname]',
-        inlineDynamicImports: true,
-      },
-      plugins: [
-        replaceEnv,
-        resolve({
-          browser: true,
-          dedupe: ['svelte'],
-        }),
-        svelte({
-          preprocess: [sveltePreprocess(), optimizeImports()],
-        }),
-        typescript(),
-        scss({
-          name: 'App.css',
-        }),
-        assets({
-          'App.js': `${view}.js`,
-          'App.css': `${view}.css`,
-        }),
-      ],
-      external: ['webview'],
-    }
-  }),
+  ...views.map((view) => ({
+    input: `src/views/${view}/App.svelte`,
+    output: {
+      dir: 'assets',
+      assetFileNames: '[name][extname]',
+      inlineDynamicImports: true,
+    },
+    plugins: [
+      replaceEnv,
+      resolve({
+        browser: true,
+        dedupe: ['svelte'],
+      }),
+      svelte({
+        preprocess: [sveltePreprocess(), optimizeImports()],
+      }),
+      typescript(),
+      scss({
+        name: 'App.css',
+      }),
+      assets({
+        'App.js': `${view}.js`,
+        'App.css': `${view}.css`,
+      }),
+    ],
+    external: ['runtime'],
+  })),
 ]

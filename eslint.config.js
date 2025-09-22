@@ -13,7 +13,7 @@ export default [
   {
     languageOptions: {
       globals: {
-        webview: true,
+        runtime: true,
       },
     },
   },

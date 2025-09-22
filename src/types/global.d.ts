@@ -1,9 +1,7 @@
 /// <reference types="svelte" />
 
-import type Webview from '@/utils/webview'
-
-export {}
+import type { Runtime } from '@/utils/runtime'
 
 declare global {
-  var webview: Webview
+  var runtime: Runtime
 }

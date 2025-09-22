@@ -44,13 +44,41 @@
           "when": "activeWebviewPanelId === gitree.panel",
           "group": "navigation@-99"
         }
+      ],
+      "view/title": [
+        {
+          "command": "gitree.settings",
+          "when": "view === gitree.panel",
+          "group": "navigation@-99"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "panel": [
+        {
+          "id": "gitree",
+          "title": "Gitree",
+          "icon": "$(git-logo)"
+        }
+      ]
+    },
+    "views": {
+      "gitree": [
+        {
+          "type": "webview",
+          "id": "gitree.panel",
+          "name": "%gitree.view%",
+          "icon": "$(git-logo)"
+        }
       ]
     }
   },
   "activationEvents": [
     "onUri",
-    "onWebviewPanel:gitree.view",
     "onStartupFinished"
+  ],
+  "extensionDependencies": [
+    "vscode.git"
   ],
   "scripts": {
     "dev": "rollup -c -w",

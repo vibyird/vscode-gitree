@@ -14,7 +14,7 @@ export abstract class Component implements Disposable {
     this.state = state
   }
 
-  public dispose() {
+  dispose() {
     while (this.subscriptions.length) {
       const subscription = this.subscriptions.pop()
       if (subscription) {

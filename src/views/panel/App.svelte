@@ -2,7 +2,7 @@
   import { DataTable } from 'carbon-components-svelte'
   import type { DataTableHeader } from 'carbon-components-svelte/src/DataTable/DataTable.svelte'
 
-  const l10n = webview.l10n
+  const { l10n } = runtime
 
   interface Row {
     id: string
@@ -15,7 +15,7 @@
   ]
   let rows: Row[]
 
-  webview.onMessage((message) => {
+  runtime.onMessage((message) => {
     switch (message.type) {
       case 'commits': {
         const data = message.data
@@ -31,7 +31,7 @@
     }
   })
 
-  webview.sendMessage({
+  runtime.sendMessage({
     type: 'init',
   })
 </script>

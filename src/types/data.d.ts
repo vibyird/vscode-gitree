@@ -2,7 +2,8 @@ import type { Commit } from '@/types/git'
 
 export interface Config {
   theme: string
-  l10nUrl: string
+  l10nUri: string
+  language: string
 }
 
 export interface ConfigMessage {
