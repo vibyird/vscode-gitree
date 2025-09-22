@@ -188,7 +188,11 @@ export abstract class View extends Component {
   render(webview: Webview): void {
     // get config
     const config: Config = {
-      theme: window.activeColorTheme.kind === ColorThemeKind.Dark || ColorThemeKind.HighContrast ? 'dark' : 'light',
+      theme:
+        window.activeColorTheme.kind === ColorThemeKind.Dark ||
+        window.activeColorTheme.kind === ColorThemeKind.HighContrast
+          ? 'dark'
+          : 'light',
       l10nUri: webview.asWebviewUri(this.#l10nUri).toString(true),
       language: env.language,
     }
