@@ -5,14 +5,17 @@ import 'carbon-components-svelte/css/all.css'
 import type { SvelteComponent } from 'svelte'
 import type { WebviewApi } from 'vscode-webview'
 
-export class Runtime {
-  readonly l10n = l10n
-  readonly config: Config
+class RuntimeImp {
+  readonly #config: Config
   readonly #api: WebviewApi<unknown>
 
   constructor(config: Config) {
     this.#api = acquireVsCodeApi()
-    this.config = config
+    this.#config = config
+  }
+
+  get config(): Config {
+    return this.#config
   }
 
   onMessage(callback: (message: ExtensionMessage) => void): () => void {
@@ -31,19 +34,18 @@ export class Runtime {
   }
 }
 
-async function render(config: Config, callback: () => SvelteComponent) {
-  const { theme, l10nUri, language } = config
-  const runtime = new Runtime(config)
+async function run(config: Config, main: (config: {}) => SvelteComponent) {
+  const { l10nUri, language } = config
   if (L10N.split(',').includes(language)) {
-    await runtime.l10n.config({
+    await l10n.config({
       uri: `${l10nUri}/bundle.l10n.${language}.json`,
     })
   }
-  if (theme === 'dark') {
-    document.documentElement.setAttribute('theme', 'g100')
-  }
-  window.runtime = runtime
-  callback()
+  window.l10n = l10n
+  window.runtime = new RuntimeImp(config)
+  main({})
 }
 
-export default render
+export type Runtime = RuntimeImp
+
+export default run

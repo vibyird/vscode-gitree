@@ -113,7 +113,7 @@ export class Provider extends Runtime implements WebviewViewProvider {
         }
         this.webview = null
       }),
-      view.onDidChangeVisibility(async () => this.visibilityEmitter.fire(false)),
+      view.onDidChangeVisibility(async () => this.visibilityEmitter.fire(view.visible)),
       webview.onDidReceiveMessage((message: WebviewMessage) => this.messageEmitter.fire(message)),
     )
     this.view.render(webview)
@@ -152,15 +152,17 @@ export abstract class View extends Component {
 
     this.#resourceUri = Uri.joinPath(context.extensionUri, 'assets')
     this.#l10nUri = Uri.joinPath(context.extensionUri, 'l10n')
-
-    runtime.onDidChangeVisibility((visible: boolean) => {
-      if (this.#visible !== visible) {
-        this.#visible = visible
-      }
-    })
-
     this.#runtime = runtime
-    this.init()
+
+    const subscriptions = this.subscriptions
+    subscriptions.push(
+      runtime.onDidChangeVisibility((visible: boolean) => {
+        if (this.#visible !== visible) {
+          this.#visible = visible
+        }
+      }),
+    )
+    this.init(subscriptions, runtime)
   }
 
   get title(): string {
@@ -183,16 +185,17 @@ export abstract class View extends Component {
     return this.#runtime
   }
 
-  protected abstract init(): void
+  protected init(subscriptions: Disposable[], runtime: Runtime): void {}
 
   render(webview: Webview): void {
     // get config
+    const theme =
+      window.activeColorTheme.kind === ColorThemeKind.Dark ||
+      window.activeColorTheme.kind === ColorThemeKind.HighContrast
+        ? 'g100'
+        : 'white'
     const config: Config = {
-      theme:
-        window.activeColorTheme.kind === ColorThemeKind.Dark ||
-        window.activeColorTheme.kind === ColorThemeKind.HighContrast
-          ? 'dark'
-          : 'light',
+      theme,
       l10nUri: webview.asWebviewUri(this.#l10nUri).toString(true),
       language: env.language,
     }
@@ -201,7 +204,7 @@ export abstract class View extends Component {
       localResourceRoots: [this.#resourceUri, this.#l10nUri],
     }
     // write html
-    webview.html = `<html>
+    webview.html = `<html theme="${theme}"}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -209,10 +212,11 @@ export abstract class View extends Component {
     <link rel="stylesheet" href="${webview.asWebviewUri(Uri.joinPath(this.#resourceUri, 'css', 'runtime.css')).toString(true)}" />
     <link rel="stylesheet" href="${webview.asWebviewUri(Uri.joinPath(this.#resourceUri, 'css', `${this.#path}.css`)).toString(true)}" />
     <script type ="module">
-      import render from "${webview.asWebviewUri(Uri.joinPath(this.#resourceUri, 'js', 'runtime.js')).toString(true)}"
+      import run from "${webview.asWebviewUri(Uri.joinPath(this.#resourceUri, 'js', 'runtime.js')).toString(true)}"
       import App from "${webview.asWebviewUri(Uri.joinPath(this.#resourceUri, 'js', `${this.#path}.js`)).toString(true)}"
-      render(${JSON.stringify(config)}, () => new App({
+      await run(${JSON.stringify(config)}, (config) => new App({
         target: document.body,
+        ...config,
       }))
     </script>
   </head>

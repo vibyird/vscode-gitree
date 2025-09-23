@@ -4,22 +4,23 @@ import { Component } from '@/utils/utils'
 import type { Runtime } from '@/utils/view'
 import { Panel } from '@/utils/view'
 import SettingsApp from '@/views/settings/app'
-import { commands, l10n, window, type ExtensionContext, type LogOutputChannel } from 'vscode'
+import type { Disposable, ExtensionContext, LogOutputChannel } from 'vscode'
+import { commands, l10n, window, } from 'vscode'
 
 class Controller extends Component {
   constructor(context: ExtensionContext, logger: LogOutputChannel, state: State) {
     super(context, logger, state)
-    this.#init(context, logger, state)
+    this.#init(this.subscriptions, context, logger, state)
   }
 
-  #init(context: ExtensionContext, logger: LogOutputChannel, state: State) {
+  #init(subscriptions: Disposable[], context: ExtensionContext, logger: LogOutputChannel, state: State) {
     const settings = new Panel(
       (runtime: Runtime): SettingsApp => new SettingsApp(context, logger, state, runtime),
       context,
       logger,
       state,
     )
-    this.subscriptions.push(
+    subscriptions.push(
       settings,
       commands.registerCommand(COMMAND_VIEW, () => {
         if (state.git.repositories.length === 0) {

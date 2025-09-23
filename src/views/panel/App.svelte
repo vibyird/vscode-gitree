@@ -2,8 +2,6 @@
   import { DataTable } from 'carbon-components-svelte'
   import type { DataTableHeader } from 'carbon-components-svelte/src/DataTable/DataTable.svelte'
 
-  const { l10n } = runtime
-
   interface Row {
     id: string
     message: string

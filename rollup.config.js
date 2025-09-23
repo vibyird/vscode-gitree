@@ -1,31 +1,50 @@
+import alias from '@rollup/plugin-alias'
 import resolve from '@rollup/plugin-node-resolve'
 import replace from '@rollup/plugin-replace'
-import typescript from '@rollup/plugin-typescript'
+import swc from '@rollup/plugin-swc'
 import { optimizeImports } from 'carbon-preprocess-svelte'
+import fs from 'fs/promises'
+import path from 'path'
 import scss from 'rollup-plugin-scss'
 import svelte from 'rollup-plugin-svelte'
 import { sveltePreprocess } from 'svelte-preprocess'
 import { assets } from './build/rollup.js'
 
-const languages = ['zh-cn']
-const views = ['panel', 'settings']
+const languages = (await fs.readdir('l10n')).map((file) => file.replace('bundle.l10n.', '').replace('.json', ''))
 
-const replaceEnv = replace({
-  include: 'src/**/constants.{ts,js}',
-  values: {
-    'process.env.L10N': JSON.stringify(languages.join(',')),
-  },
-  preventAssignment: true,
-})
+const views = await fs.readdir('src/views')
+
+const plugins = [
+  alias({
+    entries: [
+      {
+        find: '@',
+        replacement: path.resolve('src'),
+      },
+    ],
+  }),
+  replace({
+    include: 'src/**/constants.{ts,js}',
+    values: {
+      'process.env.L10N': JSON.stringify(languages.join(',')),
+    },
+    preventAssignment: true,
+  }),
+]
 
 export default [
   {
     input: 'src/main.ts',
     output: {
       file: 'extension.js',
-      inlineDynamicImports: true,
     },
-    plugins: [replaceEnv, resolve(), typescript()],
+    plugins: [
+      ...plugins,
+      resolve({
+        extensions: ['.mjs', '.js', '.ts'],
+      }),
+      swc(),
+    ],
     external: ['vscode'],
   },
   {
@@ -35,12 +54,15 @@ export default [
       assetFileNames: '[name][extname]',
     },
     plugins: [
-      replaceEnv,
-      resolve({ browser: true }),
-      typescript(),
+      ...plugins,
+      resolve({
+        extensions: ['.mjs', '.js', '.ts'],
+        browser: true,
+      }),
       scss({
         name: 'runtime.css',
       }),
+      swc(),
       assets(['runtime.js', 'runtime.css']),
     ],
   },
@@ -49,26 +71,25 @@ export default [
     output: {
       dir: 'assets',
       assetFileNames: '[name][extname]',
-      inlineDynamicImports: true,
     },
     plugins: [
-      replaceEnv,
+      ...plugins,
       resolve({
+        extensions: ['.mjs', '.js', '.ts', '.svelte'],
         browser: true,
         dedupe: ['svelte'],
       }),
       svelte({
         preprocess: [sveltePreprocess(), optimizeImports()],
       }),
-      typescript(),
       scss({
         name: 'App.css',
       }),
+      swc(),
       assets({
         'App.js': `${view}.js`,
         'App.css': `${view}.css`,
       }),
     ],
-    external: ['runtime'],
   })),
 ]

@@ -1,4 +1,4 @@
-import { NAME } from '@/states/constants'
+import { NAME, SETTINGS_VIEW } from '@/states/constants'
 import type { State } from '@/states/state'
 import type { Runtime } from '@/utils/view'
 import { View } from '@/utils/view'
@@ -13,11 +13,9 @@ class App extends View {
       state,
       runtime,
       title: l10n.t(`${NAME} Settings`),
-      path: 'settings',
+      path: SETTINGS_VIEW,
     })
   }
-
-  protected init(): void {}
 }
 
 export default App

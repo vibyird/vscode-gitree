@@ -1,8 +1,8 @@
-import { NAME } from '@/states/constants'
+import { NAME, PANEL_VIEW } from '@/states/constants'
 import type { State } from '@/states/state'
 import type { Runtime } from '@/utils/view'
 import { View } from '@/utils/view'
-import type { ExtensionContext, LogOutputChannel } from 'vscode'
+import type { Disposable, ExtensionContext, LogOutputChannel } from 'vscode'
 import { l10n } from 'vscode'
 
 class App extends View {
@@ -13,26 +13,28 @@ class App extends View {
       state,
       runtime,
       title: l10n.t(NAME),
-      path: 'panel',
+      path: PANEL_VIEW,
     })
   }
 
-  protected init(): void {
-    this.runtime.onMessage(async (message) => {
-      switch (message.type) {
-        case 'init': {
-          const repository = this.state.git.repositories[0]
-          const commits = await repository.log()
-          if (message != null) {
-            this.runtime.sendMessage({
-              type: 'commits',
-              data: commits,
-            })
+  protected init(subscriptions: Disposable[], runtime: Runtime): void {
+    subscriptions.push(
+      runtime.onMessage(async (message) => {
+        switch (message.type) {
+          case 'init': {
+            const repository = this.state.git.repositories[0]
+            const commits = await repository.log()
+            if (message != null) {
+              this.runtime.sendMessage({
+                type: 'commits',
+                data: commits,
+              })
+            }
+            break
           }
-          break
         }
-      }
-    })
+      }),
+    )
   }
 }
 
