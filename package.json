@@ -15,11 +15,31 @@
   "main": "./extension.js",
   "l10n": "./l10n",
   "contributes": {
+    "configuration": [
+      {
+        "id": "gitree",
+        "title": "Gitree",
+        "order": 1,
+        "properties": {
+          "gitree.statusBar.showItem": {
+            "type": "boolean",
+            "default": true,
+            "description": "%gitree.statusBar.showItem%"
+          }
+        }
+      }
+    ],
     "commands": [
       {
         "category": "Gitree",
         "command": "gitree.view",
         "title": "%gitree.view%"
+      },
+      {
+        "category": "Gitree",
+        "command": "gitree.graph.refresh",
+        "title": "%gitree.refresh%",
+        "icon": "$(refresh)"
       },
       {
         "category": "Gitree",
@@ -38,18 +58,16 @@
       }
     },
     "menus": {
-      "editor/title": [
-        {
-          "command": "gitree.settings",
-          "when": "activeWebviewPanelId === gitree.panel",
-          "group": "navigation@-99"
-        }
-      ],
       "view/title": [
         {
+          "command": "gitree.graph.refresh",
+          "when": "view === gitree.graph",
+          "group": "navigation@98"
+        },
+        {
           "command": "gitree.settings",
-          "when": "view === gitree.panel",
-          "group": "navigation@-99"
+          "when": "view === gitree.graph",
+          "group": "navigation@99"
         }
       ]
     },
@@ -66,7 +84,7 @@
       "gitree": [
         {
           "type": "webview",
-          "id": "gitree.panel",
+          "id": "gitree.graph",
           "name": "%gitree.view%",
           "icon": "$(git-logo)"
         }
@@ -74,7 +92,7 @@
     }
   },
   "activationEvents": [
-    "onUri",
+    "onWebviewPanel:gitree.settings",
     "onStartupFinished"
   ],
   "extensionDependencies": [

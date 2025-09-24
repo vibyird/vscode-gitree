@@ -14,7 +14,6 @@ export default [
     languageOptions: {
       globals: {
         l10n: true,
-        runtime: true,
       },
     },
   },

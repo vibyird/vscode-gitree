@@ -16,10 +16,25 @@ export interface CommitsMessage {
   data: Commit[]
 }
 
-export type ExtensionMessage = ConfigMessage | CommitsMessage
+export interface RefreshMessage {
+  type: 'refresh'
+}
+
+export type ExtensionMessage = ConfigMessage | CommitsMessage | RefreshMessage
 
 export interface InitMessage {
   type: 'init'
 }
 
-export type WebviewMessage = InitMessage
+export type WebviewMessage = InitMessage | RefreshMessage
+
+interface CommitRow {
+  id: string
+  message: string
+  authorDate: Date
+}
+
+export interface PanelState {
+  scrollY: number
+  commitRows: CommitRow[]
+}

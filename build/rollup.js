@@ -1,48 +1,42 @@
-export function assets(
-  replaces,
-  options = {
-    forceEmptyCss: true,
-  },
-) {
+export function assets(names = []) {
   return {
     name: 'assets',
     generateBundle(_, bundle) {
-      if (Array.isArray(replaces)) {
-        const newReplaces = {}
-        for (const config of replaces) {
-          newReplaces[config] = config
+      const emptyFiles = []
+      // force empty css file
+      for (const name of names) {
+        if (bundle[name]) {
+          continue
         }
-        replaces = newReplaces
-      }
-      for (const [name, newName] of Object.entries(replaces)) {
-        const item = bundle[name]
-        delete bundle[name]
-        if (item) {
-          if (name.endsWith('.js')) {
-            this.emitFile({
-              type: 'prebuilt-chunk',
-              fileName: `js/${newName}`,
-              code: item.code,
-            })
-            delete bundle[name]
-          } else if (name.endsWith('.css')) {
-            this.emitFile({
-              type: 'asset',
-              fileName: `css/${newName}`,
-              source: item.source,
-            })
-            delete bundle[name]
-          }
-        } else if (options.forceEmptyCss) {
-          if (name.endsWith('.css')) {
-            this.emitFile({
-              type: 'asset',
-              fileName: `css/${newName}`,
-              source: '@charset "UTF-8";',
-            })
-          }
+        if (name.endsWith('.css')) {
+          emptyFiles.push({
+            type: 'asset',
+            fileName: `css/${name}`,
+            source: '@charset "UTF-8";',
+          })
         }
       }
+      const files = []
+      // move to js and css directory
+      for (const [name, item] of Object.entries(bundle)) {
+        if (name.endsWith('.js')) {
+          files.push({
+            type: 'prebuilt-chunk',
+            fileName: `js/${name}`,
+            code: item.code,
+          })
+          delete bundle[name]
+        } else if (name.endsWith('.css')) {
+          files.push({
+            type: 'asset',
+            fileName: `css/${name}`,
+            source: item.source,
+          })
+          delete bundle[name]
+        }
+      }
+      // emit files
+      ;[...files, ...emptyFiles].map((file) => this.emitFile(file))
     },
   }
 }

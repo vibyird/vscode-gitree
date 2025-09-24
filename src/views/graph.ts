@@ -1,11 +1,11 @@
-import { NAME, PANEL_VIEW } from '@/states/constants'
+import { NAME } from '@/states/constants'
 import type { State } from '@/states/state'
 import type { Runtime } from '@/utils/view'
 import { View } from '@/utils/view'
 import type { Disposable, ExtensionContext, LogOutputChannel } from 'vscode'
 import { l10n } from 'vscode'
 
-class App extends View {
+class GraphView extends View {
   constructor(context: ExtensionContext, logger: LogOutputChannel, state: State, runtime: Runtime) {
     super({
       context,
@@ -13,7 +13,7 @@ class App extends View {
       state,
       runtime,
       title: l10n.t(NAME),
-      path: PANEL_VIEW,
+      path: 'Graph',
     })
   }
 
@@ -38,4 +38,4 @@ class App extends View {
   }
 }
 
-export default App
+export default GraphView

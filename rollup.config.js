@@ -10,9 +10,39 @@ import svelte from 'rollup-plugin-svelte'
 import { sveltePreprocess } from 'svelte-preprocess'
 import { assets } from './build/rollup.js'
 
-const languages = (await fs.readdir('l10n')).map((file) => file.replace('bundle.l10n.', '').replace('.json', ''))
+const languages = []
+for (const file of await fs.readdir('l10n')) {
+  const match = file.match(/^bundle\.l10n\.([\w-]+)\.json$/)
+  if (!match) {
+    continue
+  }
+  const language = match[1]
+  try {
+    const path = `l10n/${file}`
+    const stat = await fs.stat(path)
+    if (stat.isFile()) {
+      await fs.access(path, fs.constants.R_OK)
+      languages.push(language)
+    }
+  } catch (_) {}
+}
 
-const views = await fs.readdir('src/views')
+const webviews = []
+for (const file of await fs.readdir('src/webviews')) {
+  const match = file.match(/^([\w-]+)\.svelte$/)
+  if (!match) {
+    continue
+  }
+  const webview = match[1]
+  try {
+    const path = `src/webviews/${file}`
+    const stat = await fs.stat(path)
+    if (stat.isFile()) {
+      await fs.access(path, fs.constants.R_OK)
+      webviews.push(webview)
+    }
+  } catch (_) {}
+}
 
 const plugins = [
   alias({
@@ -66,8 +96,8 @@ export default [
       assets(['runtime.js', 'runtime.css']),
     ],
   },
-  ...views.map((view) => ({
-    input: `src/views/${view}/App.svelte`,
+  ...webviews.map((webview) => ({
+    input: `src/webviews/${webview}.svelte`,
     output: {
       dir: 'assets',
       assetFileNames: '[name][extname]',
@@ -83,13 +113,10 @@ export default [
         preprocess: [sveltePreprocess(), optimizeImports()],
       }),
       scss({
-        name: 'App.css',
+        name: `${webview}.css`,
       }),
       swc(),
-      assets({
-        'App.js': `${view}.js`,
-        'App.css': `${view}.css`,
-      }),
+      assets([`${webview}.js`, `${webview}.css`]),
     ],
   })),
 ]

@@ -8,7 +8,6 @@ export abstract class Component implements Disposable {
   protected readonly state: State
 
   constructor(context: ExtensionContext, logger: LogOutputChannel, state: State) {
-    this.subscriptions = []
     this.context = context
     this.logger = logger
     this.state = state

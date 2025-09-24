@@ -1,4 +1,3 @@
-import { ID } from '@/states/constants'
 import type { State } from '@/states/state'
 import type { Config, ExtensionMessage, WebviewMessage } from '@/types/data'
 import { Component } from '@/utils/utils'
@@ -9,14 +8,16 @@ import type {
   LogOutputChannel,
   Webview,
   WebviewPanel,
+  WebviewPanelSerializer,
   WebviewView,
   WebviewViewProvider,
   WebviewViewResolveContext,
 } from 'vscode'
-import { ColorThemeKind, env, EventEmitter, Uri, ViewColumn, window } from 'vscode'
+import { ColorThemeKind, env, EventEmitter, Uri, window } from 'vscode'
 
 export abstract class Runtime extends Component {
-  protected readonly view: View
+  readonly view: View
+
   protected readonly visibilityEmitter: EventEmitter<boolean>
   protected readonly messageEmitter: EventEmitter<WebviewMessage>
   protected webview: Webview
@@ -46,31 +47,26 @@ export abstract class Runtime extends Component {
   }
 }
 
-export class Panel extends Runtime {
+export class PanelSerializer<T = unknown> extends Runtime implements WebviewPanelSerializer {
   #panel: WebviewPanel
 
-  show(): void {
-    const column = window.activeTextEditor ? window.activeTextEditor.viewColumn : undefined
-    let panel = this.#panel
-    if (panel) {
-      panel.reveal(column)
-      return
-    }
-    // create new panel
-    panel = window.createWebviewPanel(`${ID}.${this.view.path}`, this.view.title, column || ViewColumn.One, {
-      retainContextWhenHidden: false,
-    })
+  get panel(): WebviewPanel {
+    return this.#panel
+  }
+
+  async deserializeWebviewPanel(panel: WebviewPanel, state: T): Promise<void> {
+    this.render(panel)
+  }
+
+  render(panel: WebviewPanel): void {
+    const webview = panel.webview
+    this.webview = webview
+    this.#panel = panel
+    // init panel icon
     panel.iconPath = {
       light: Uri.joinPath(this.view.resourceUri, 'icons', 'git-black.svg'),
       dark: Uri.joinPath(this.view.resourceUri, 'icons', 'git-white.svg'),
     }
-    this.#render(panel)
-  }
-
-  #render(panel: WebviewPanel): void {
-    const webview = panel.webview
-    this.webview = webview
-    this.#panel = panel
     // register subscriptions
     const subscriptions: Disposable[] = []
     subscriptions.push(
@@ -89,11 +85,20 @@ export class Panel extends Runtime {
       panel.onDidChangeViewState(() => this.visibilityEmitter.fire(panel.visible)),
       webview.onDidReceiveMessage((message: WebviewMessage) => this.messageEmitter.fire(message)),
     )
+    // render
     this.view.render(webview)
+  }
+
+  dispose(): void {
+    super.dispose()
+    if (this.#panel) {
+      this.#panel.dispose()
+      this.#panel = null
+    }
   }
 }
 
-export class Provider extends Runtime implements WebviewViewProvider {
+export class ViewProvider extends Runtime implements WebviewViewProvider {
   resolveWebviewView(view: WebviewView, context: WebviewViewResolveContext, token: CancellationToken): void {
     view.title = this.view.title
     this.#render(view)
@@ -102,6 +107,7 @@ export class Provider extends Runtime implements WebviewViewProvider {
   #render(view: WebviewView): void {
     const webview = view.webview
     this.webview = webview
+    // register subscriptions
     const subscriptions: Disposable[] = []
     subscriptions.push(
       view.onDidDispose(() => {
@@ -116,6 +122,7 @@ export class Provider extends Runtime implements WebviewViewProvider {
       view.onDidChangeVisibility(async () => this.visibilityEmitter.fire(view.visible)),
       webview.onDidReceiveMessage((message: WebviewMessage) => this.messageEmitter.fire(message)),
     )
+    // render
     this.view.render(webview)
   }
 }
@@ -154,7 +161,10 @@ export abstract class View extends Component {
     this.#l10nUri = Uri.joinPath(context.extensionUri, 'l10n')
     this.#runtime = runtime
 
-    const subscriptions = this.subscriptions
+    this.#init(this.subscriptions, runtime)
+  }
+
+  #init(subscriptions: Disposable[], runtime: Runtime): void {
     subscriptions.push(
       runtime.onDidChangeVisibility((visible: boolean) => {
         if (this.#visible !== visible) {
@@ -213,8 +223,8 @@ export abstract class View extends Component {
     <link rel="stylesheet" href="${webview.asWebviewUri(Uri.joinPath(this.#resourceUri, 'css', `${this.#path}.css`)).toString(true)}" />
     <script type ="module">
       import run from "${webview.asWebviewUri(Uri.joinPath(this.#resourceUri, 'js', 'runtime.js')).toString(true)}"
-      import App from "${webview.asWebviewUri(Uri.joinPath(this.#resourceUri, 'js', `${this.#path}.js`)).toString(true)}"
-      await run(${JSON.stringify(config)}, (config) => new App({
+      import Page from "${webview.asWebviewUri(Uri.joinPath(this.#resourceUri, 'js', `${this.#path}.js`)).toString(true)}"
+      await run(${JSON.stringify(config)}, (config) => new Page({
         target: document.body,
         ...config,
       }))

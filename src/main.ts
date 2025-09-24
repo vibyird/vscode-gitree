@@ -1,64 +1,68 @@
-import { Config } from '@/states/config'
+import {
+  COMMAND_GRAPH_REFRESH,
+  COMMAND_SETTINGS,
+  COMMAND_VIEW,
+  GRAPH_VIEW_ID,
+  ID,
+  NAME,
+  SETTINGS_PANEL_ID,
+} from '@/states/constants'
 import { State } from '@/states/state'
 import { Component } from '@/utils/utils'
-import type { ExtensionContext, LogOutputChannel, StatusBarItem } from 'vscode'
-import { l10n, StatusBarAlignment, window, workspace } from 'vscode'
-import Command from './controllers/command'
-import Window from './controllers/window'
-import { COMMAND_VIEW, NAME } from './states/constants'
+import type { Disposable, ExtensionContext, LogOutputChannel } from 'vscode'
+import { commands, l10n, ViewColumn, window } from 'vscode'
 
 class Extension extends Component {
-  readonly #config: Config
-  readonly #statusBarItem: StatusBarItem
-
   constructor(context: ExtensionContext, logger: LogOutputChannel, state: State) {
     super(context, logger, state)
-    // create config
-    this.#config = new Config()
-    // create status bar item
-    const statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left, 50)
-    statusBarItem.text = `$(git-logo) ${l10n.t(NAME)}`
-    statusBarItem.tooltip = l10n.t('Show Git Panel')
-    statusBarItem.command = COMMAND_VIEW
-    this.#statusBarItem = statusBarItem
-    this.#init(this.context, this.logger, this.state)
+    this.#init(this.subscriptions, context, logger, state)
   }
 
-  #init(context: ExtensionContext, logger: LogOutputChannel, state: State) {
+  #init(subscriptions: Disposable[], context: ExtensionContext, logger: LogOutputChannel, state: State): void {
     // register subscriptions
-    this.subscriptions.push(
-      new Command(context, logger, state),
-      new Window(context, logger, state),
-      workspace.onDidChangeConfiguration((event) => {
-        if (event.affectsConfiguration(this.#config.key('show-in-status-bar'))) {
-          this.#changeStatusBar()
-        }
-      }),
-      this.state.git.onDidOpenRepository(() => {
-        this.#changeStatusBar()
-      }),
-      this.state.git.onDidCloseRepository(() => {
-        this.#changeStatusBar()
-      }),
-      this.#statusBarItem,
+    subscriptions.push(
+      window.registerWebviewPanelSerializer(SETTINGS_PANEL_ID, state.panels[SETTINGS_PANEL_ID]),
+      window.registerWebviewViewProvider(GRAPH_VIEW_ID, state.views[GRAPH_VIEW_ID]),
+      commands.registerCommand(COMMAND_VIEW, () => this.#showGraphView()),
+      commands.registerCommand(COMMAND_GRAPH_REFRESH, () => this.#refreshGraphView()),
+      commands.registerCommand(COMMAND_SETTINGS, () => this.#showSettingsPanel()),
     )
-    this.#changeStatusBar()
   }
 
-  #changeStatusBar() {
-    if (this.#config.showInStatusBar && this.state.git.repositories.length > 0) {
-      this.#statusBarItem.show()
-    } else {
-      this.#statusBarItem.hide()
+  #showGraphView(): void {
+    if (this.state.git.repositories.length === 0) {
+      window.showInformationMessage(l10n.t('There are no Git repositories in the current workspace.'))
+      return
     }
+    commands.executeCommand(`workbench.view.extension.${ID}`)
+  }
+
+  #refreshGraphView(): void {
+    const graphView = this.state.views[GRAPH_VIEW_ID]
+    graphView.sendMessage({
+      type: 'refresh',
+    })
+  }
+
+  #showSettingsPanel(): void {
+    const settingsPanel = this.state.panels[SETTINGS_PANEL_ID]
+    const column = window.activeTextEditor ? window.activeTextEditor.viewColumn : undefined
+    if (settingsPanel.panel) {
+      settingsPanel.panel.reveal(column)
+      return
+    }
+    // create new panel
+    const panel = window.createWebviewPanel(SETTINGS_PANEL_ID, settingsPanel.view.title, column || ViewColumn.One)
+    settingsPanel.render(panel)
   }
 }
 
 export function activate(context: ExtensionContext) {
-  // create logger
+  // create logger and state
   const logger = window.createOutputChannel(NAME, { log: true })
+  const state = new State(context, logger)
   // register subscriptions
-  context.subscriptions.push(new Extension(context, logger, new State(logger)), logger)
+  context.subscriptions.push(logger, state, new Extension(context, logger, state))
 }
 
 export function deactivate(): void {}
