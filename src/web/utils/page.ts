@@ -1,7 +1,7 @@
-import type { ExtensionMessage, WebviewMessage } from '@/types/data'
+import type { ExtensionMessage, PageMessage } from '@/types/data'
 import type { WebviewApi } from 'vscode-webview'
 
-class Runtime<StateType = unknown> {
+export class Runtime<StateType = unknown> {
   readonly #api: WebviewApi<StateType>
 
   constructor() {
@@ -27,11 +27,7 @@ class Runtime<StateType = unknown> {
     }
   }
 
-  sendMessage(message: WebviewMessage): void {
+  sendMessage(message: PageMessage): void {
     this.#api.postMessage(message)
   }
-}
-
-export function acquireRuntime<StateType>(): Runtime<StateType> {
-  return new Runtime<StateType>()
 }

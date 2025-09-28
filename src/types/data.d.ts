@@ -1,5 +1,3 @@
-import type { Commit } from '@/types/git'
-
 export interface Config {
   theme: string
   l10nUri: string
@@ -16,25 +14,57 @@ export interface CommitsMessage {
   data: Commit[]
 }
 
+export interface CommitMessage {
+  type: 'commit'
+  data: Commit
+}
+
 export interface RefreshMessage {
   type: 'refresh'
 }
 
-export type ExtensionMessage = ConfigMessage | CommitsMessage | RefreshMessage
+export type ExtensionMessage = ConfigMessage | CommitsMessage | CommitMessage | RefreshMessage
 
 export interface InitMessage {
   type: 'init'
 }
 
-export type WebviewMessage = InitMessage | RefreshMessage
-
-interface CommitRow {
-  id: string
-  message: string
-  authorDate: Date
+export interface GetCommitMessage {
+  type: 'get_commit'
+  params: { hash: string }
 }
 
+export type PageMessage = InitMessage | GetCommitMessage | RefreshMessage
+
 export interface PanelState {
-  scrollY: number
-  commitRows: CommitRow[]
+  percent?: {
+    aside: number
+  }
+  scrollTop?: {
+    main: number
+    aside: number
+  }
+  commits?: Commit[]
+  commit?: Commit
+}
+
+export interface CommitShortStat {
+  readonly files: number
+  readonly insertions: number
+  readonly deletions: number
+}
+
+export interface Commit {
+  readonly hash: string
+  readonly message: string
+  readonly parents: string[]
+  readonly authorDate?: string
+  readonly authorName?: string
+  readonly authorEmail?: string
+  readonly commitDate?: string
+  readonly shortStat?: CommitShortStat
+  readonly files?: {
+    path: string
+    status: string
+  }[]
 }

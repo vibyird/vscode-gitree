@@ -1,5 +1,5 @@
 import type { State } from '@/states/state'
-import type { Config, ExtensionMessage, WebviewMessage } from '@/types/data'
+import type { Config, ExtensionMessage, PageMessage } from '@/types/data'
 import { Component } from '@/utils/utils'
 import type {
   CancellationToken,
@@ -19,14 +19,14 @@ export abstract class Runtime extends Component {
   readonly view: View
 
   protected readonly visibilityEmitter: EventEmitter<boolean>
-  protected readonly messageEmitter: EventEmitter<WebviewMessage>
+  protected readonly messageEmitter: EventEmitter<PageMessage>
   protected webview: Webview
 
   constructor(factory: (runtime: Runtime) => View, context: ExtensionContext, logger: LogOutputChannel, state: State) {
     super(context, logger, state)
 
     this.visibilityEmitter = new EventEmitter<boolean>()
-    this.messageEmitter = new EventEmitter<WebviewMessage>()
+    this.messageEmitter = new EventEmitter<PageMessage>()
     const view = factory(this)
     this.subscriptions.push(view)
     this.view = view
@@ -36,7 +36,7 @@ export abstract class Runtime extends Component {
     return this.visibilityEmitter.event(listener)
   }
 
-  onMessage(listener: (message: WebviewMessage) => void): Disposable {
+  onMessage(listener: (message: PageMessage) => void): Disposable {
     return this.messageEmitter.event(listener)
   }
 
@@ -83,7 +83,7 @@ export class PanelSerializer<T = unknown> extends Runtime implements WebviewPane
         this.visibilityEmitter.fire(false)
       }),
       panel.onDidChangeViewState(() => this.visibilityEmitter.fire(panel.visible)),
-      webview.onDidReceiveMessage((message: WebviewMessage) => this.messageEmitter.fire(message)),
+      webview.onDidReceiveMessage((message: PageMessage) => this.messageEmitter.fire(message)),
     )
     // render
     this.view.render(webview)
@@ -120,7 +120,7 @@ export class ViewProvider extends Runtime implements WebviewViewProvider {
         this.webview = null
       }),
       view.onDidChangeVisibility(async () => this.visibilityEmitter.fire(view.visible)),
-      webview.onDidReceiveMessage((message: WebviewMessage) => this.messageEmitter.fire(message)),
+      webview.onDidReceiveMessage((message: PageMessage) => this.messageEmitter.fire(message)),
     )
     // render
     this.view.render(webview)
@@ -129,7 +129,7 @@ export class ViewProvider extends Runtime implements WebviewViewProvider {
 
 export abstract class View extends Component {
   readonly #title: string
-  readonly #path: string
+  readonly #page: string
 
   readonly #resourceUri: Uri
   readonly #l10nUri: Uri
@@ -143,19 +143,19 @@ export abstract class View extends Component {
     state,
     runtime,
     title,
-    path,
+    page,
   }: {
     context: ExtensionContext
     logger: LogOutputChannel
     state: State
     runtime: Runtime
     title: string
-    path: string
+    page: string
   }) {
     super(context, logger, state)
     this.#runtime = runtime
     this.#title = title
-    this.#path = path
+    this.#page = page
 
     this.#resourceUri = Uri.joinPath(context.extensionUri, 'assets')
     this.#l10nUri = Uri.joinPath(context.extensionUri, 'l10n')
@@ -179,10 +179,6 @@ export abstract class View extends Component {
     return this.#title
   }
 
-  get path(): string {
-    return this.#path
-  }
-
   get visible(): boolean {
     return this.#visible
   }
@@ -202,7 +198,7 @@ export abstract class View extends Component {
     const theme =
       window.activeColorTheme.kind === ColorThemeKind.Dark ||
       window.activeColorTheme.kind === ColorThemeKind.HighContrast
-        ? 'g100'
+        ? 'dark'
         : 'white'
     const config: Config = {
       theme,
@@ -219,15 +215,15 @@ export abstract class View extends Component {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${this.#title}</title>
-    <link rel="stylesheet" href="${webview.asWebviewUri(Uri.joinPath(this.#resourceUri, 'css', 'runtime.css')).toString(true)}" />
-    <link rel="stylesheet" href="${webview.asWebviewUri(Uri.joinPath(this.#resourceUri, 'css', `${this.#path}.css`)).toString(true)}" />
+    <link rel="stylesheet" href="${webview.asWebviewUri(Uri.joinPath(this.#resourceUri, 'css', 'main.css')).toString(true)}" />
+    <link rel="stylesheet" href="${webview.asWebviewUri(Uri.joinPath(this.#resourceUri, 'css', `${this.#page}.css`)).toString(true)}" />
     <script type ="module">
-      import run from "${webview.asWebviewUri(Uri.joinPath(this.#resourceUri, 'js', 'runtime.js')).toString(true)}"
-      import Page from "${webview.asWebviewUri(Uri.joinPath(this.#resourceUri, 'js', `${this.#path}.js`)).toString(true)}"
-      await run(${JSON.stringify(config)}, (config) => new Page({
+      import run from "${webview.asWebviewUri(Uri.joinPath(this.#resourceUri, 'js', 'main.js')).toString(true)}"
+      import Page from "${webview.asWebviewUri(Uri.joinPath(this.#resourceUri, 'js', `${this.#page}.js`)).toString(true)}"
+      await run((options) => new Page({
         target: document.body,
-        ...config,
-      }))
+        ...options,
+      }), ${JSON.stringify(config)})
     </script>
   </head>
   <body>

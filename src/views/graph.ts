@@ -5,7 +5,7 @@ import { View } from '@/utils/view'
 import type { Disposable, ExtensionContext, LogOutputChannel } from 'vscode'
 import { l10n } from 'vscode'
 
-class GraphView extends View {
+export default class extends View {
   constructor(context: ExtensionContext, logger: LogOutputChannel, state: State, runtime: Runtime) {
     super({
       context,
@@ -13,7 +13,7 @@ class GraphView extends View {
       state,
       runtime,
       title: l10n.t(NAME),
-      path: 'Graph',
+      page: 'Graph',
     })
   }
 
@@ -22,8 +22,7 @@ class GraphView extends View {
       runtime.onMessage(async (message) => {
         switch (message.type) {
           case 'init': {
-            const repository = this.state.git.repositories[0]
-            const commits = await repository.log()
+            const commits = await this.state.git.log()
             if (message != null) {
               this.runtime.sendMessage({
                 type: 'commits',
@@ -32,10 +31,16 @@ class GraphView extends View {
             }
             break
           }
+          case 'get_commit': {
+            const { hash } = message.params
+            const commit = await this.state.git.show(hash)
+            this.runtime.sendMessage({
+              type: 'commit',
+              data: commit,
+            })
+          }
         }
       }),
     )
   }
 }
-
-export default GraphView

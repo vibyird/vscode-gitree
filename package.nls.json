@@ -1,5 +1,5 @@
 {
-  "gitree.view": "View Git Graph",
+  "gitree.graph": "View Git Graph",
   "gitree.refresh": "Refresh",
   "gitree.settings": "Settings",
   "gitree.statusBar.showItem": "Show a Status Bar Item that opens the Git Graph View when clicked."

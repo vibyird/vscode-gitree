@@ -27,19 +27,19 @@ for (const file of await fs.readdir('l10n')) {
   } catch (_) {}
 }
 
-const webviews = []
-for (const file of await fs.readdir('src/webviews')) {
+const pages = []
+for (const file of await fs.readdir('src/web/pages')) {
   const match = file.match(/^([\w-]+)\.svelte$/)
   if (!match) {
     continue
   }
-  const webview = match[1]
+  const page = match[1]
   try {
-    const path = `src/webviews/${file}`
+    const path = `src/web/pages/${file}`
     const stat = await fs.stat(path)
     if (stat.isFile()) {
       await fs.access(path, fs.constants.R_OK)
-      webviews.push(webview)
+      pages.push(page)
     }
   } catch (_) {}
 }
@@ -78,7 +78,7 @@ export default [
     external: ['vscode'],
   },
   {
-    input: 'src/utils/runtime.ts',
+    input: 'src/web/main.ts',
     output: {
       dir: 'assets',
       assetFileNames: '[name][extname]',
@@ -90,14 +90,15 @@ export default [
         browser: true,
       }),
       scss({
-        name: 'runtime.css',
+        name: 'main.css',
+        quietDeps: true,
       }),
       swc(),
-      assets(['runtime.js', 'runtime.css']),
+      assets(['main.js', 'main.css']),
     ],
   },
-  ...webviews.map((webview) => ({
-    input: `src/webviews/${webview}.svelte`,
+  ...pages.map((page) => ({
+    input: `src/web/pages/${page}.svelte`,
     output: {
       dir: 'assets',
       assetFileNames: '[name][extname]',
@@ -113,10 +114,11 @@ export default [
         preprocess: [sveltePreprocess(), optimizeImports()],
       }),
       scss({
-        name: `${webview}.css`,
+        name: `${page}.css`,
+        quietDeps: true,
       }),
       swc(),
-      assets([`${webview}.js`, `${webview}.css`]),
+      assets([`${page}.js`, `${page}.css`]),
     ],
   })),
 ]

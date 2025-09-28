@@ -5,7 +5,7 @@ import { View } from '@/utils/view'
 import type { ExtensionContext, LogOutputChannel } from 'vscode'
 import { l10n } from 'vscode'
 
-class SettingView extends View {
+export default class extends View {
   constructor(context: ExtensionContext, logger: LogOutputChannel, state: State, runtime: Runtime) {
     super({
       context,
@@ -13,9 +13,7 @@ class SettingView extends View {
       state,
       runtime,
       title: l10n.t(`${NAME} Settings`),
-      path: 'Settings',
+      page: 'Settings',
     })
   }
 }
-
-export default SettingView

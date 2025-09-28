@@ -30,7 +30,7 @@ class Extension extends Component {
   }
 
   #showGraphView(): void {
-    if (this.state.git.repositories.length === 0) {
+    if (this.state.repositories.length === 0) {
       window.showInformationMessage(l10n.t('There are no Git repositories in the current workspace.'))
       return
     }

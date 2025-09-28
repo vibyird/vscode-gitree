@@ -8,11 +8,18 @@ export function assets(names = []) {
         if (bundle[name]) {
           continue
         }
-        if (name.endsWith('.css')) {
+        if (name.endsWith('.js')) {
+          emptyFiles.push({
+            type: 'prebuilt-chunk',
+            fileName: `js/${name}`,
+            code: '',
+          })
+          delete bundle[name]
+        } else if (name.endsWith('.css')) {
           emptyFiles.push({
             type: 'asset',
             fileName: `css/${name}`,
-            source: '@charset "UTF-8";',
+            source: '',
           })
         }
       }
