@@ -1,19 +1,19 @@
 import type { State } from '@/states/state'
-import type { Disposable, ExtensionContext, LogOutputChannel } from 'vscode'
+import type { Disposable } from 'vscode'
 
 export abstract class Component implements Disposable {
   protected readonly subscriptions: Disposable[] = []
-  protected readonly context: ExtensionContext
-  protected readonly logger: LogOutputChannel
-  protected readonly state: State
+  readonly #state: State
 
-  constructor(context: ExtensionContext, logger: LogOutputChannel, state: State) {
-    this.context = context
-    this.logger = logger
-    this.state = state
+  constructor(state: State) {
+    this.#state = state
   }
 
-  dispose() {
+  get state(): State {
+    return this.#state
+  }
+
+  dispose(): void {
     while (this.subscriptions.length) {
       const subscription = this.subscriptions.pop()
       if (subscription) {

@@ -1,5 +1,5 @@
 import type { Commit } from '@/types/data'
-import type { API, Git, LogOptions, Repository } from '@/types/git'
+import type { Git, LogOptions, Repository } from '@/types/git'
 import type { ExecException } from 'child_process'
 import { exec } from 'child_process'
 
@@ -7,9 +7,9 @@ export class GitAPI {
   #git: Git
   #repo: Repository
 
-  constructor(api: API) {
-    this.#git = api.git
-    this.#repo = api.repositories[0]
+  constructor(git: Git, repo: Repository) {
+    this.#git = git
+    this.#repo = repo
   }
 
   async log(options?: LogOptions): Promise<Commit[]> {

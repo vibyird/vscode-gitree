@@ -1,20 +1,16 @@
 import { NAME } from '@/states/constants'
-import type { State } from '@/states/state'
-import type { Runtime } from '@/utils/view'
+import type { Runtime } from '@/utils/runtime'
 import { View } from '@/utils/view'
-import type { Disposable, ExtensionContext, LogOutputChannel } from 'vscode'
+import type { Disposable } from 'vscode'
 import { l10n } from 'vscode'
 
 export default class extends View {
-  constructor(context: ExtensionContext, logger: LogOutputChannel, state: State, runtime: Runtime) {
-    super({
-      context,
-      logger,
-      state,
-      runtime,
-      title: l10n.t(NAME),
-      page: 'Graph',
-    })
+  get title(): string {
+    return l10n.t(NAME)
+  }
+
+  get page(): string {
+    return 'Graph'
   }
 
   protected init(subscriptions: Disposable[], runtime: Runtime): void {
@@ -23,12 +19,10 @@ export default class extends View {
         switch (message.type) {
           case 'init': {
             const commits = await this.state.git.log()
-            if (message != null) {
-              this.runtime.sendMessage({
-                type: 'commits',
-                data: commits,
-              })
-            }
+            this.runtime.sendMessage({
+              type: 'commits',
+              data: commits,
+            })
             break
           }
           case 'get_commit': {
@@ -38,6 +32,7 @@ export default class extends View {
               type: 'commit',
               data: commit,
             })
+            break
           }
         }
       }),

@@ -1,7 +1,7 @@
 export interface Config {
   theme: string
-  l10nUri: string
   language: string
+  l10nUri: string
 }
 
 export interface ConfigMessage {

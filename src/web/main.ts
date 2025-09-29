@@ -1,8 +1,8 @@
 import { L10N } from '@/states/constants'
 import type { Config } from '@/types/data'
-import '@/web/main.scss'
-import { Runtime } from '@/web/utils/page'
 import * as l10n from '@vscode/l10n'
+import '@web/main.scss'
+import { Runtime } from '@web/utils/runtime'
 import type { SvelteComponent } from 'svelte'
 
 type Main = (options: {
@@ -13,7 +13,7 @@ type Main = (options: {
 }) => SvelteComponent
 
 export default async function (main: Main, config: Config): Promise<void> {
-  const { l10nUri, language } = config
+  const { language, l10nUri } = config
   if (L10N.split(',').includes(language)) {
     await l10n.config({
       uri: `${l10nUri}/bundle.l10n.${language}.json`,

@@ -1,25 +1,62 @@
-import { COMMAND_VIEW, GRAPH_VIEW_ID, ID, NAME, SETTINGS_PANEL_ID } from '@/states/constants'
-import type { PanelState } from '@/types/data'
+import { GRAPH_VIEW_ID, ID, NAME, SETTINGS_PANEL_ID } from '@/states/constants'
+import type { Config, PanelState } from '@/types/data'
 import type { API, GitExtension, Repository } from '@/types/git'
 import { GitAPI } from '@/utils/git'
-import { PanelSerializer, Runtime, ViewProvider } from '@/utils/view'
+import { PanelSerializer, Runtime, ViewProvider } from '@/utils/runtime'
 import GraphView from '@/views/graph'
 import SettingsView from '@/views/settings'
-import type { Disposable, ExtensionContext, LogOutputChannel, StatusBarItem, WorkspaceConfiguration } from 'vscode'
-import { extensions, l10n, StatusBarAlignment, window, workspace } from 'vscode'
+import type {
+  ConfigurationChangeEvent,
+  ConfigurationScope,
+  Disposable,
+  ExtensionContext,
+  LogOutputChannel,
+  Uri,
+  Webview,
+  WorkspaceConfiguration,
+} from 'vscode'
+import { ColorThemeKind, env, EventEmitter, extensions, window, workspace } from 'vscode'
 
 export class State {
-  readonly #subscriptions: Disposable[] = []
+  protected readonly subscriptions: Disposable[] = []
+  readonly #context: ExtensionContext
+  readonly #logger: LogOutputChannel
 
-  readonly #statusBarItem: StatusBarItem = window.createStatusBarItem(StatusBarAlignment.Left, 50)
-  #config: WorkspaceConfiguration = workspace.getConfiguration(ID)
-
-  readonly #gitAPI: API = extensions.getExtension<GitExtension>('vscode.git').exports.getAPI(1)
+  readonly #gitAPI: API
   readonly #panels: Record<string, PanelSerializer> = {}
   readonly #views: Record<string, ViewProvider> = {}
 
-  constructor(context: ExtensionContext, logger: LogOutputChannel) {
-    this.#init(this.#subscriptions, context, logger, this)
+  readonly #configChangeEventEmitter: EventEmitter<ConfigurationChangeEvent>
+  #config: WorkspaceConfiguration
+
+  constructor(context: ExtensionContext) {
+    this.#context = context
+    const logger = window.createOutputChannel(NAME, { log: true })
+    this.#logger = logger
+    this.#gitAPI = extensions.getExtension<GitExtension>('vscode.git').exports.getAPI(1)
+    this.#configChangeEventEmitter = new EventEmitter<ConfigurationChangeEvent>()
+    this.#config = workspace.getConfiguration(ID)
+    this.subscriptions.push(logger)
+    this.#init(this.subscriptions)
+  }
+
+  get context(): ExtensionContext {
+    return this.#context
+  }
+
+  get logger(): LogOutputChannel {
+    return this.#logger
+  }
+
+  get theme(): string {
+    return window.activeColorTheme.kind === ColorThemeKind.Dark ||
+      window.activeColorTheme.kind === ColorThemeKind.HighContrast
+      ? 'dark'
+      : 'white'
+  }
+
+  get language(): string {
+    return env.language
   }
 
   get repositories(): Repository[] {
@@ -27,7 +64,7 @@ export class State {
   }
 
   get git(): GitAPI {
-    return new GitAPI(this.#gitAPI)
+    return new GitAPI(this.#gitAPI.git, this.#gitAPI.repositories[0])
   }
 
   get panels(): Record<string, PanelSerializer> {
@@ -38,74 +75,78 @@ export class State {
     return this.#views
   }
 
-  #init(subscriptions: Disposable[], context: ExtensionContext, logger: LogOutputChannel, state: State): void {
-    this.#initStatusBar(subscriptions)
-    this.#initPanels(subscriptions, context, logger, state)
-    this.#initViews(subscriptions, context, logger, state)
+  get<T>(section: string): T | undefined {
+    return this.#config.get<T>(section)
   }
 
-  get config(): WorkspaceConfiguration {
-    return this.#config
-  }
-
-  #initStatusBar(subscriptions: Disposable[]): void {
-    // set statusBarItem
-    const statusBarItem = this.#statusBarItem
-    statusBarItem.text = `$(git-logo) ${l10n.t(NAME)}`
-    statusBarItem.tooltip = l10n.t('Show Git Graph')
-    statusBarItem.command = COMMAND_VIEW
-    const git = this.#gitAPI
-    subscriptions.push(
-      statusBarItem,
-      git.onDidOpenRepository(() => this.#changeStatusBar()),
-      git.onDidCloseRepository(() => this.#changeStatusBar()),
-      workspace.onDidChangeConfiguration((event) => {
-        if (event.affectsConfiguration(ID)) {
-          this.#config = workspace.getConfiguration(ID)
-          if (event.affectsConfiguration(`${ID}.statusBar`)) {
-            this.#changeStatusBar()
-          }
-        }
-      }),
-    )
-    this.#changeStatusBar()
-  }
-
-  #changeStatusBar(): void {
-    if (this.#config.get<boolean>('statusBar.showItem') && this.#gitAPI.repositories.length > 0) {
-      this.#statusBarItem.show()
-    } else {
-      this.#statusBarItem.hide()
+  getWebviewConfig(
+    webview: Webview,
+    {
+      l10nUri,
+    }: {
+      l10nUri: Uri
+    },
+  ): Config {
+    return {
+      theme: this.theme,
+      language: this.language,
+      l10nUri: webview.asWebviewUri(l10nUri).toString(true),
     }
   }
 
-  #initPanels(subscriptions: Disposable[], context: ExtensionContext, logger: LogOutputChannel, state: State): void {
+  onDidChangeConfiguration(
+    listener: (event: ConfigurationChangeEvent) => void,
+    thisArgs?: any,
+    disposables?: Disposable[],
+  ): Disposable {
+    return this.#configChangeEventEmitter.event(listener, thisArgs, disposables)
+  }
+
+  onDidOpenRepository(listener: (repo: Repository) => void, thisArgs?: any, disposables?: Disposable[]): Disposable {
+    return this.#gitAPI.onDidOpenRepository(listener, thisArgs, disposables)
+  }
+
+  onDidCloseRepository(listener: (repo: Repository) => void, thisArgs?: any, disposables?: Disposable[]): Disposable {
+    return this.#gitAPI.onDidCloseRepository(listener, thisArgs, disposables)
+  }
+
+  #init(subscriptions: Disposable[]): void {
+    subscriptions.push(
+      workspace.onDidChangeConfiguration((event) => {
+        if (event.affectsConfiguration(ID)) {
+          this.#config = workspace.getConfiguration(ID)
+          this.#configChangeEventEmitter.fire({
+            affectsConfiguration(section: string, scope?: ConfigurationScope): boolean {
+              return event.affectsConfiguration(`${ID}.${section}`, scope)
+            },
+          })
+        }
+      }),
+    )
+    this.#initPanels(subscriptions)
+    this.#initViews(subscriptions)
+  }
+
+  #initPanels(subscriptions: Disposable[]): void {
     const panels = this.#panels
     const settingsPanel = new PanelSerializer<PanelState>(
-      (runtime: Runtime): SettingsView => new SettingsView(context, logger, state, runtime),
-      context,
-      logger,
-      state,
+      (runtime: Runtime): SettingsView => new SettingsView(runtime),
+      this,
     )
     subscriptions.push(settingsPanel)
     panels[SETTINGS_PANEL_ID] = settingsPanel
   }
 
-  #initViews(subscriptions: Disposable[], context: ExtensionContext, logger: LogOutputChannel, state: State): void {
+  #initViews(subscriptions: Disposable[]): void {
     const views = this.#views
-    const graphView = new ViewProvider(
-      (runtime: Runtime): GraphView => new GraphView(context, logger, state, runtime),
-      context,
-      logger,
-      state,
-    )
+    const graphView = new ViewProvider((runtime: Runtime): GraphView => new GraphView(runtime), this)
     subscriptions.push(graphView)
     views[GRAPH_VIEW_ID] = graphView
   }
 
-  dispose() {
-    while (this.#subscriptions.length) {
-      const subscription = this.#subscriptions.pop()
+  dispose(): void {
+    while (this.subscriptions.length) {
+      const subscription = this.subscriptions.pop()
       if (subscription) {
         subscription.dispose()
       }

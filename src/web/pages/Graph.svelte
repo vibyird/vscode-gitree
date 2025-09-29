@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { Commit, PanelState } from '@/types/data'
-  import CommitDetail from '@/web/components/CommitDetail.svelte'
-  import CommitList from '@/web/components/CommitList.svelte'
-  import { drag } from '@/web/utils/drag'
-  import { Runtime } from '@/web/utils/page'
+  import CommitDetail from '@web/components/CommitDetail.svelte'
+  import CommitList from '@web/components/CommitList.svelte'
+  import { drag } from '@web/utils/drag'
+  import { Runtime } from '@web/utils/runtime'
   import { tick } from 'svelte'
 
   export let runtime: Runtime<PanelState>
@@ -50,6 +50,7 @@
         setState(() => {
           commit = message.data
         })
+        break
       }
     }
   })
@@ -126,7 +127,7 @@
   {/if}
 </div>
 
-<style lang="scss" scoped>
+<style lang="scss">
   .container {
     display: flex;
     height: 100vh;
