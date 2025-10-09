@@ -22,14 +22,14 @@ export abstract class Runtime extends Component {
   protected readonly view: View
   protected webview: Webview
 
-  constructor(factory: (runtime: Runtime) => View, state: State) {
+  constructor(creator: (runtime: Runtime) => View, state: State) {
     super(state)
     const extensionUri = state.context.extensionUri
     this.#resourceUri = Uri.joinPath(extensionUri, 'assets')
     this.#l10nUri = Uri.joinPath(extensionUri, 'l10n')
     this.visibilityEmitter = new EventEmitter<boolean>()
     this.messageEmitter = new EventEmitter<PageMessage>()
-    const view = factory(this)
+    const view = creator(this)
     this.subscriptions.push(view)
     this.view = view
   }

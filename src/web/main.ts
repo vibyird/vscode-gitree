@@ -1,7 +1,6 @@
 import { L10N } from '@/states/constants'
 import type { Config } from '@/types/data'
 import * as l10n from '@vscode/l10n'
-import '@web/main.scss'
 import { Runtime } from '@web/utils/runtime'
 import type { SvelteComponent } from 'svelte'
 

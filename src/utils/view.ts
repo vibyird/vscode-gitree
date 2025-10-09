@@ -50,7 +50,6 @@ export abstract class View extends Component {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${this.title}</title>
-    <link rel="stylesheet" href="${webview.asWebviewUri(Uri.joinPath(resourceUri, 'css', 'main.css')).toString(true)}" />
     <link rel="stylesheet" href="${webview.asWebviewUri(Uri.joinPath(resourceUri, 'css', `${this.page}.css`)).toString(true)}" />
     <script type ="module">
       import run from "${webview.asWebviewUri(Uri.joinPath(resourceUri, 'js', 'main.js')).toString(true)}"

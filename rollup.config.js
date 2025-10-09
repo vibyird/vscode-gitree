@@ -2,7 +2,6 @@ import alias from '@rollup/plugin-alias'
 import resolve from '@rollup/plugin-node-resolve'
 import replace from '@rollup/plugin-replace'
 import swc from '@rollup/plugin-swc'
-import { optimizeImports } from 'carbon-preprocess-svelte'
 import path from 'path'
 import scss from 'rollup-plugin-scss'
 import svelte from 'rollup-plugin-svelte'
@@ -70,12 +69,8 @@ export default [
         extensions: ['.mjs', '.js', '.ts'],
         browser: true,
       }),
-      scss({
-        name: 'main.css',
-        sass,
-      }),
       swc(),
-      assets(['main.js', 'main.css']),
+      assets(['main.js']),
     ],
   },
   ...pages.map((page) => ({
@@ -92,7 +87,7 @@ export default [
         dedupe: ['svelte'],
       }),
       svelte({
-        preprocess: [sveltePreprocess(), optimizeImports()],
+        preprocess: [sveltePreprocess()],
       }),
       scss({
         name: `${page}.css`,
