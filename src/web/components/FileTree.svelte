@@ -1,16 +1,25 @@
 <script lang="ts">
-  import FileItem from './FileItem.svelte'
+  import FileItem from '@web/components/FileItem.svelte'
+  import ChevronRight from '@web/icons/ChevronRight.svelte'
+  import { createEventDispatcher } from 'svelte'
 
   interface File {
     path: string
     status: string
   }
 
+  export let title: string
+  export let expanded: boolean = true
   export let files: File[]
+
+  const dispatch = createEventDispatcher<{
+    select: void
+  }>()
 
   interface Item {
     id: number
     name: string
+    status?: string
     children?: Item[]
     expanded?: boolean
   }
@@ -18,7 +27,17 @@
   let items: Item[] = []
   let selected: Item = null
 
-  function clickSeleted({ detail: item }: CustomEvent<Item>) {
+  function keydown(e: KeyboardEvent, callback: () => void) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      callback()
+    }
+  }
+
+  function click() {
+    dispatch('select')
+  }
+
+  function selectItem(item: Item) {
     selected = item
   }
 
@@ -63,7 +82,7 @@
   function buildItems(files: File[]): Item[] {
     let id = 1
     const items: Item[] = []
-    for (const { path } of files) {
+    for (const { path, status } of files) {
       const names = path.split('/').filter(Boolean)
       for (let i = 0, children = items; i < names.length; i++) {
         const name = names[i]
@@ -78,6 +97,8 @@
             item.children = []
           }
           children = item.children
+        } else {
+          item.status = status
         }
       }
     }
@@ -90,14 +111,49 @@
   }
 </script>
 
-<div class="tree">
-  {#each items as item (item.id)}
-    <FileItem {item} {selected} on:click:selected={clickSeleted} />
-  {/each}
+<div class="header" role="row" tabindex="0" on:keydown={(e) => keydown(e, click)} on:click={click}>
+  <div class="indicator" class:expanded>
+    <ChevronRight />
+  </div>
+  <div class="title">{title}</div>
 </div>
+{#if expanded}
+  {#each items as item (item.id)}
+    <FileItem {item} {selected} depth={1} on:select={(e) => selectItem(e.detail)} />
+  {/each}
+{/if}
 
 <style lang="scss">
-  .tree {
-    padding: 8px 0;
+  .header {
+    display: flex;
+    align-items: center;
+    height: 22px;
+    line-height: 22px;
+    cursor: pointer;
+    user-select: none;
+
+    &:hover {
+      color: var(--vscode-list-hoverForeground);
+      background-color: var(--vscode-list-hoverBackground);
+    }
+
+    .indicator {
+      width: 16px;
+      height: 16px;
+      padding-right: 6px;
+
+      &.expanded {
+        transform: rotate(90deg);
+        transform-box: fill-box;
+        transform-origin: center;
+      }
+    }
+
+    .title {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 </style>

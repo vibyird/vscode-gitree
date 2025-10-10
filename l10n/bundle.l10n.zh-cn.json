@@ -3,5 +3,6 @@
   "Gitree Settings": "Gitree设置",
   "Commit Message": "提交消息",
   "Commit Date": "提交日期",
+  "Commit Detail": "提交明细",
   "There are no Git repositories in the current workspace.": "当前工作空间没有任何 Git 存储库。"
 }
