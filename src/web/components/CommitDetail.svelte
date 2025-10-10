@@ -35,10 +35,10 @@
   .title {
     height: 22px;
     line-height: 22px;
-    margin: 2px 0;
     position: sticky;
     top: 0;
     z-index: 1;
+    margin-bottom: 2px;
     padding-left: 8px;
     font-weight: bold;
     background-color: var(--vscode-panel-background);
@@ -54,6 +54,9 @@
     span {
       height: 22px;
       line-height: 22px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .label {

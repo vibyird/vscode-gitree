@@ -65,7 +65,7 @@
       grid-template-columns: 1.5fr 1fr;
       height: 22px;
       line-height: 22px;
-      margin: 2px 0;
+      margin-bottom: 2px;
 
       .cell {
         padding-left: 8px;
