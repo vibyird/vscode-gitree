@@ -1,4 +1,9 @@
-<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+<script lang="ts">
+  export const width = 16
+  export const height = 16
+</script>
+
+<svg {width} {height} viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
   <path
     fill-rule="evenodd"
     clip-rule="evenodd"

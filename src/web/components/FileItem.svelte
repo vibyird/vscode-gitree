@@ -39,7 +39,7 @@
   on:keydown={(e) => keydown(e, click)}
   on:click={click}>
   {#if item.children}
-    <div class="indicator" class:expanded={item.expanded}><ChevronRight /></div>
+    <div class="indicator" class:expanded={item.expanded}><ChevronRight width={16} height={16} /></div>
   {:else}
     <div class="status" data-status={item.status[0]}>{item.status[0]}</div>
   {/if}
@@ -71,8 +71,8 @@
     }
 
     .indicator {
-      width: 16px;
-      height: 16px;
+      display: flex;
+      align-items: center;
       padding-right: 6px;
 
       &.expanded {

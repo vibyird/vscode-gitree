@@ -138,12 +138,14 @@
     display: flex;
     height: 100vh;
     overflow: hidden;
+
     main {
       flex: 1 1 auto;
       height: 100%;
       overflow-y: auto;
       scrollbar-width: none;
     }
+
     aside {
       flex: 0 0 20%;
       height: 100%;

@@ -112,9 +112,7 @@
 </script>
 
 <div class="header" role="row" tabindex="0" on:keydown={(e) => keydown(e, click)} on:click={click}>
-  <div class="indicator" class:expanded>
-    <ChevronRight />
-  </div>
+  <div class="indicator" class:expanded><ChevronRight width={16} height={16} /></div>
   <div class="title">{title}</div>
 </div>
 {#if expanded}
@@ -138,8 +136,8 @@
     }
 
     .indicator {
-      width: 16px;
-      height: 16px;
+      display: flex;
+      align-items: center;
       padding-right: 6px;
 
       &.expanded {
