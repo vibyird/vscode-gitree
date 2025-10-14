@@ -86,11 +86,17 @@
     })
   })
 
-  function clickCommit({ detail: commit }: CustomEvent<Commit>) {
+  function selectCommit(c: Commit) {
+    if (!c) {
+      setState(() => {
+        commit = null
+      })
+      return
+    }
     runtime.sendMessage({
       type: 'get_commit',
       params: {
-        hash: commit.hash,
+        hash: c.hash,
       },
     })
   }
@@ -117,7 +123,7 @@
 
 <div bind:this={containerElement} class="container">
   <main bind:this={mainElement} on:scroll={scroll}>
-    <CommitList {commits} on:click:commit={clickCommit}></CommitList>
+    <CommitList commits={commits.slice(0, 100)} on:select={(e) => selectCommit(e.detail)}></CommitList>
   </main>
   {#if commit}
     <div role="button" tabindex={0} class="splitter" on:mousedown={dragSplitter} />
@@ -132,22 +138,24 @@
     display: flex;
     height: 100vh;
     overflow: hidden;
+
     main {
       flex: 1 1 auto;
       height: 100%;
       overflow-y: auto;
+      scrollbar-width: none;
     }
+
     aside {
       flex: 0 0 20%;
       height: 100%;
       overflow-y: auto;
+      scrollbar-width: none;
     }
 
     .splitter {
       position: relative;
-      flex: 0 0 1px;
-      background: #c0c0c0;
-      cursor: col-resize;
+      cursor: ew-resize;
       user-select: none;
 
       &::before {

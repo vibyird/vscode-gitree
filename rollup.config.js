@@ -18,12 +18,12 @@ const plugins = [
   alias({
     entries: [
       {
-        find: '@',
-        replacement: path.resolve('src'),
-      },
-      {
         find: '@web',
         replacement: path.resolve('src', 'web'),
+      },
+      {
+        find: '@',
+        replacement: path.resolve('src'),
       },
     ],
   }),
