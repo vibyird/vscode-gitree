@@ -33,12 +33,11 @@
 
 <style lang="scss">
   .title {
-    height: 22px;
-    line-height: 22px;
+    height: 28px;
+    line-height: 28px;
     position: sticky;
     top: 0;
     z-index: 1;
-    padding-bottom: 2px;
     padding-left: 8px;
     font-weight: bold;
     background-color: var(--vscode-panel-background);

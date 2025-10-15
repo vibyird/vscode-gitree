@@ -1,20 +1,35 @@
 <script lang="ts">
   import type { Commit } from '@/types/data'
-  import CommitGraph from '@web/components/CommitGraph.svelte'
+  import GraphItem from '@web/components/GraphItem.svelte'
   import { createEventDispatcher } from 'svelte'
+
+  const colors: string[] = [
+    'rgba(21, 160, 191, 1)',
+    'rgba(6, 105, 247, 1)',
+    'rgba(142, 0, 194, 1)',
+    'rgba(197, 23, 182, 1)',
+    'rgba(217, 1, 113, 1)',
+    'rgba(205, 1, 1, 1)',
+    'rgba(243, 93, 46, 1)',
+    'rgba(242, 202, 51, 1)',
+    'rgba(123, 217, 56, 1)',
+    'rgba(46, 206, 157, 1)',
+  ]
 
   interface Group {
     inited: boolean
     size: number
     next: string
-    start?: string
+    merged?: string
   }
 
   interface Row {
     commit: Commit
+    color: string
     graph: {
       refs: {
         index: number
+        color: string
         inited: boolean
         continued: boolean
         branched: boolean
@@ -85,59 +100,68 @@
     const groups: Group[] = []
     let index: number
     for (const commit of commits) {
+      const current = commit.hash
+      const next = commit.parents.length > 0 ? commit.parents[0] : ''
       // add current group
-      index = createGroup(groups, commit.hash)
-      const group = groups[index]
-      groups[index] = group
+      const i = createGroup(groups, current)
+      const group = groups[i]
+      groups[i] = group
         ? {
             inited: false,
             size: group.size + 1,
-            next: commit.parents[0],
+            next,
           }
         : {
             inited: true,
             size: 1,
-            next: commit.parents[0],
+            next,
           }
+      index = i
       // add merged group
       if (commit.parents.length > 1) {
-        const index = createGroup(groups, commit.parents[1])
-        const group = groups[index]
-        groups[index] = group
+        const merged = commit.hash
+        const next = commit.parents[1]
+        const i = createGroup(groups, next)
+        const group = groups[i]
+        groups[i] = group
           ? {
               inited: false,
               size: group.size,
-              next: commit.parents[1],
-              start: commit.hash,
+              next,
+              merged,
             }
           : {
               inited: true,
               size: 0,
-              next: commit.parents[1],
-              start: commit.hash,
+              next,
+              merged,
             }
       }
+      // convert groups to refs
+      const refs = groups
+        .map((group, index) =>
+          group
+            ? {
+                index,
+                color: colors[index % colors.length],
+                inited: !group.next || group.next === commit.hash,
+                continued: !group.inited,
+                branched: group.next && group.next === commit.hash,
+                merged: group.merged && group.merged === commit.hash,
+              }
+            : null,
+        )
+        .filter(Boolean)
       // push row
       rows.push({
+        color: colors[index % colors.length],
         commit,
         graph: {
-          refs: groups
-            .map((group, index) =>
-              group
-                ? {
-                    index,
-                    inited: !group.next,
-                    continued: !group.inited,
-                    branched: group.next && group.next === commit.hash,
-                    merged: group.start && group.start === commit.hash,
-                  }
-                : null,
-            )
-            .filter(Boolean),
+          refs,
           index,
         },
       })
-      // clean end group
+      // clean end group and group inited status
       for (let i = 0; i < groups.length; i++) {
         const group = groups[i]
         if (group) {
@@ -168,8 +192,8 @@
         on:keydown={(e) => keydown(e, () => selectCommit(row.commit))}
         on:click={() => selectCommit(row.commit)}
         on:dblclick={() => cancelSelectCommit(row.commit)}>
-        <div class="cell graph" role="cell">
-          <CommitGraph refs={row.graph.refs} index={row.graph.index} height={24} />
+        <div class="cell graph" style:border-right="2px solid {row.color}" role="cell">
+          <GraphItem refs={row.graph.refs} index={row.graph.index} height={28} width={24} />
         </div>
         <div class="cell" role="cell">{row.commit.message}</div>
         <div class="cell" role="cell">{row.commit.commitDate}</div>
@@ -181,22 +205,23 @@
 <style lang="scss">
   .table {
     display: grid;
-    grid-template-rows: auto 1fr;
     height: 100%;
 
     .row {
       display: grid;
+      grid-template-rows: 28px;
       grid-template-columns: 1fr 1.5fr 1fr;
-      height: 22px;
-      line-height: 22px;
-      padding-bottom: 2px;
-
-      .graph {
-        padding-bottom: 0;
-      }
+      align-items: center;
 
       .cell {
-        padding-left: 8px;
+        height: 22px;
+        line-height: 22px;
+        padding: 0 3px;
+      }
+
+      .graph {
+        display: inline-flex;
+        align-items: center;
       }
     }
 
