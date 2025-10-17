@@ -1,53 +1,48 @@
 <script lang="ts">
   import ChevronRight from '@web/icons/ChevronRight.svelte'
+  import { keydown } from '@web/utils/event'
   import { createEventDispatcher } from 'svelte'
 
-  interface Item {
+  interface File {
     id: number
     name: string
     status?: string
-    children?: Item[]
+    children?: File[]
     expanded?: boolean
   }
 
-  export let item: Item
-  export let selected: Item
+  export let file: File
+  export let selected: File
   export let depth: number = 0
 
   const dispatch = createEventDispatcher<{
-    select: Item
+    select: File
   }>()
 
-  function keydown(e: KeyboardEvent, callback: () => void) {
-    if (e.key === 'Enter' || e.key === ' ') {
-      callback()
-    }
-  }
-
   function click() {
-    item.expanded = !item.expanded
-    dispatch('select', item)
+    file.expanded = !file.expanded
+    dispatch('select', file)
   }
 </script>
 
 <div
   class="row"
-  class:selected={selected && item.id === selected.id}
+  class:selected={selected && file.id === selected.id}
   style:padding-left="{depth * 8}px"
   role="row"
   tabindex="0"
   on:keydown={(e) => keydown(e, click)}
   on:click={click}>
-  {#if item.children}
-    <div class="indicator" class:expanded={item.expanded}><ChevronRight width={16} height={16} /></div>
+  {#if file.children}
+    <div class="indicator" class:expanded={file.expanded}><ChevronRight width={16} height={16} /></div>
   {:else}
-    <div class="status" data-status={item.status[0]}>{item.status[0]}</div>
+    <div class="status" data-status={file.status[0]}>{file.status[0]}</div>
   {/if}
-  <div class="name">{item.name}</div>
+  <div class="name">{file.name}</div>
 </div>
-{#if item.children && item.expanded}
-  {#each item.children as child (child.id)}
-    <svelte:self {selected} item={child} depth={depth + 1} on:select />
+{#if file.children && file.expanded}
+  {#each file.children as child (child.id)}
+    <svelte:self {selected} file={child} depth={depth + 1} on:select />
   {/each}
 {/if}
 
@@ -73,7 +68,7 @@
     .indicator {
       display: flex;
       align-items: center;
-      padding-right: 6px;
+      padding: 0 3px;
 
       &.expanded {
         transform: rotate(90deg);

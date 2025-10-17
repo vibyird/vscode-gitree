@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Commit } from '@/types/data'
-  import GraphItem from '@web/components/GraphItem.svelte'
+  import CommitGraph from '@web/components/CommitGraph.svelte'
+  import { keydown } from '@web/utils/event'
   import { createEventDispatcher } from 'svelte'
 
   const colors: string[] = [
@@ -25,7 +26,6 @@
 
   interface Row {
     commit: Commit
-    color: string
     graph: {
       refs: {
         index: number
@@ -47,12 +47,6 @@
 
   let selected: Commit
   let rows: Row[]
-
-  function keydown(e: KeyboardEvent, callback: () => void): void {
-    if (e.key === 'Enter' || e.key === ' ') {
-      callback()
-    }
-  }
 
   function selectCommit(commit: Commit): void {
     if (selected && selected.hash === commit.hash) {
@@ -154,7 +148,6 @@
         .filter(Boolean)
       // push row
       rows.push({
-        color: colors[index % colors.length],
         commit,
         graph: {
           refs,
@@ -176,14 +169,18 @@
   }
 </script>
 
-<div class="table" role="table">
-  <div class="thead row" role="row">
-    <div class="cell" role="columnheader">{window.l10n.t('Graph')}</div>
-    <div class="cell" role="columnheader">{window.l10n.t('Commit Message')}</div>
-    <div class="cell" role="columnheader">{window.l10n.t('Commit Date')}</div>
+<div class="container" role="table">
+  <div class="head">
+    <div class="row" role="row">
+      <div class="cell" role="columnheader">{window.l10n.t('Graph')}</div>
+      <div class="cell" role="columnheader">{window.l10n.t('Commit Message')}</div>
+      <div class="cell" role="columnheader">{window.l10n.t('Commit Date')}</div>
+    </div>
   </div>
-  <div class="tdata">
-    {#each rows as row (row.commit.hash)}
+  <div class="data">
+    {#each rows as row, id (row.commit.hash)}
+      {@const graph = row.graph}
+      {@const ref = graph.refs.filter((ref) => ref.index === graph.index).pop()}
       <div
         class="row"
         tabindex="0"
@@ -192,8 +189,15 @@
         on:keydown={(e) => keydown(e, () => selectCommit(row.commit))}
         on:click={() => selectCommit(row.commit)}
         on:dblclick={() => cancelSelectCommit(row.commit)}>
-        <div class="cell graph" style:border-right="2px solid {row.color}" role="cell">
-          <GraphItem refs={row.graph.refs} index={row.graph.index} height={28} width={24} />
+        <div class="cell graph" style:border-right="2px solid {ref.color}" role="cell">
+          <CommitGraph refs={graph.refs} index={graph.index} height={28} width={24} />
+          {#if !ref.continued}
+            <div
+              class="ref-line"
+              style:width="{(graph.index + 0.5) * 24}px"
+              style:border-top="{id ? 1 : 2}px solid {ref.color}"
+              style:opacity={id ? 0.25 : 1} />
+          {/if}
         </div>
         <div class="cell" role="cell">{row.commit.message}</div>
         <div class="cell" role="cell">{row.commit.commitDate}</div>
@@ -203,29 +207,27 @@
 </div>
 
 <style lang="scss">
-  .table {
+  .container {
     display: grid;
+    grid-template-columns: 1fr 1.5fr 1fr;
+    grid-template-rows: 28px 1fr;
     height: 100%;
 
     .row {
-      display: grid;
-      grid-template-rows: 28px;
-      grid-template-columns: 1fr 1.5fr 1fr;
-      align-items: center;
+      display: contents;
 
       .cell {
         height: 22px;
         line-height: 22px;
         padding: 0 3px;
       }
-
-      .graph {
-        display: inline-flex;
-        align-items: center;
-      }
     }
 
-    .thead {
+    > .head {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: subgrid;
+      align-items: center;
       position: sticky;
       top: 0;
       z-index: 1;
@@ -234,23 +236,44 @@
       border-bottom: 1px solid var(--vscode-panel-border);
     }
 
-    .tdata {
+    > .data {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: subgrid;
+      grid-auto-rows: 28px;
+      align-items: center;
+      height: 100%;
+      overflow-x: hidden;
       overflow-y: auto;
-      scrollbar-width: none;
+      scrollbar-width: thin;
 
       .row {
-        align-content: start;
         cursor: pointer;
         user-select: none;
 
         &:hover {
-          color: var(--vscode-list-hoverForeground);
-          background-color: var(--vscode-list-hoverBackground);
+          .cell {
+            color: var(--vscode-list-hoverForeground);
+            background-color: var(--vscode-list-hoverBackground);
+          }
         }
 
         &.selected {
-          color: var(--vscode-list-activeSelectionForeground);
-          background-color: var(--vscode-list-activeSelectionBackground);
+          .cell {
+            color: var(--vscode-list-activeSelectionForeground);
+            background-color: var(--vscode-list-activeSelectionBackground);
+          }
+        }
+
+        .graph {
+          display: inline-flex;
+          position: relative;
+          align-items: center;
+        }
+
+        .ref-line {
+          position: absolute;
+          z-index: 1;
         }
       }
     }

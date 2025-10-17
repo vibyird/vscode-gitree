@@ -1,3 +1,9 @@
+export function keydown(e: KeyboardEvent, callback: () => void) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    callback()
+  }
+}
+
 export function drag(callback: (e: MouseEvent) => void): () => void {
   let dragging: boolean = false
 

@@ -2,7 +2,7 @@
   import type { Commit, PanelState } from '@/types/data'
   import CommitDetail from '@web/components/CommitDetail.svelte'
   import CommitList from '@web/components/CommitList.svelte'
-  import { drag } from '@web/utils/drag'
+  import { drag } from '@web/utils/event'
   import { Runtime } from '@web/utils/runtime'
   import { tick } from 'svelte'
 
@@ -137,20 +137,15 @@
   .container {
     display: flex;
     height: 100vh;
-    overflow: hidden;
 
     main {
       flex: 1 1 auto;
       height: 100%;
-      overflow-y: auto;
-      scrollbar-width: none;
     }
 
     aside {
       flex: 0 0 20%;
       height: 100%;
-      overflow-y: auto;
-      scrollbar-width: none;
     }
 
     .splitter {
@@ -166,10 +161,6 @@
         left: -4px;
         right: -4px;
         z-index: 1;
-      }
-
-      &:hover::before {
-        background: rgba(0, 0, 0, 0.05);
       }
     }
   }
