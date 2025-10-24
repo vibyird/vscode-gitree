@@ -18,10 +18,20 @@ export default class extends View {
       runtime.onMessage(async (message) => {
         switch (message.type) {
           case 'init': {
-            const commits = await this.state.git.log()
+            const { HEAD, branches, tags, remotes } = await this.state.git.showRef()
+            const stashes = await this.state.git.showStashList()
+            const commits = await this.state.git.log({
+              stashes,
+            })
             this.runtime.sendMessage({
-              type: 'commits',
-              data: commits,
+              type: 'init',
+              data: {
+                HEAD,
+                branches,
+                tags,
+                remotes,
+                commits,
+              },
             })
             break
           }

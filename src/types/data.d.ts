@@ -1,60 +1,10 @@
 export interface Config {
-  theme: string
-  language: string
-  l10nUri: string
+  readonly theme: string
+  readonly language: string
+  readonly l10nUri: string
 }
 
-export interface ConfigMessage {
-  type: 'config'
-  data: Config
-}
-
-export interface CommitsMessage {
-  type: 'commits'
-  data: Commit[]
-}
-
-export interface CommitMessage {
-  type: 'commit'
-  data: Commit
-}
-
-export interface RefreshMessage {
-  type: 'refresh'
-}
-
-export type ExtensionMessage = ConfigMessage | CommitsMessage | CommitMessage | RefreshMessage
-
-export interface InitMessage {
-  type: 'init'
-}
-
-export interface GetCommitMessage {
-  type: 'get_commit'
-  params: { hash: string }
-}
-
-export type PageMessage = InitMessage | GetCommitMessage | RefreshMessage
-
-export interface PanelState {
-  percent?: {
-    aside: number
-  }
-  scrollTop?: {
-    main: number
-    aside: number
-  }
-  commits?: Commit[]
-  commit?: Commit
-}
-
-export interface CommitShortStat {
-  readonly files: number
-  readonly insertions: number
-  readonly deletions: number
-}
-
-export interface Commit {
+export interface GitCommit {
   readonly hash: string
   readonly message: string
   readonly parents: string[]
@@ -62,9 +12,82 @@ export interface Commit {
   readonly authorName?: string
   readonly authorEmail?: string
   readonly commitDate?: string
-  readonly shortStat?: CommitShortStat
+  readonly shortStat?: {
+    readonly files: number
+    readonly insertions: number
+    readonly deletions: number
+  }
   readonly files?: {
-    path: string
-    status: string
+    readonly path: string
+    readonly status: string
   }[]
+  readonly stash?: string
+}
+
+export interface GitRef {
+  readonly name: string
+  readonly hash: string
+}
+
+export interface GitRemote {
+  readonly name: string
+  readonly HEAD: string
+  readonly branches: GitRef[]
+}
+
+export interface ConfigMessage {
+  readonly type: 'config'
+  readonly data: Config
+}
+
+export interface InitExtensionMessage {
+  readonly type: 'init'
+  readonly data: {
+    readonly HEAD: string
+    readonly branches: GitRef[]
+    readonly tags: GitRef[]
+    readonly remotes: GitRemote[]
+    readonly commits: GitCommit[]
+  }
+}
+
+export interface CommitMessage {
+  readonly type: 'commit'
+  readonly data: GitCommit
+}
+
+export interface RefreshMessage {
+  readonly type: 'refresh'
+}
+
+export type ExtensionMessage = ConfigMessage | InitExtensionMessage | CommitMessage | RefreshMessage
+
+export interface InitPageMessage {
+  readonly type: 'init'
+}
+
+export interface GetCommitMessage {
+  readonly type: 'get_commit'
+  readonly params: { readonly hash: string }
+}
+
+export type PageMessage = InitPageMessage | GetCommitMessage | RefreshMessage
+
+export interface GraphState {
+  scrollTop?: number
+  asideWidth?: string
+  sectionWidth: {
+    main: string
+    aside: string
+  }
+  HEAD?: string
+  branches?: GitRef[]
+  tags?: GitRef[]
+  remotes?: GitRemote[]
+  commits?: GitCommit[]
+  commit?: GitCommit
+}
+
+interface State {
+  graph?: GraphState
 }

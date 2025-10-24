@@ -1,13 +1,11 @@
 import { L10N } from '@/states/constants'
 import type { Config } from '@/types/data'
 import * as l10n from '@vscode/l10n'
-import { Runtime } from '@web/utils/runtime'
 import type { SvelteComponent } from 'svelte'
 
 type Main = (options: {
   props: {
     config: Config
-    runtime: Runtime
   }
 }) => SvelteComponent
 
@@ -22,7 +20,6 @@ export default async function (main: Main, config: Config): Promise<void> {
   main({
     props: {
       config,
-      runtime: new Runtime(),
     },
   })
 }

@@ -17,3 +17,16 @@ export const COMMAND_VIEW = `${ID}.view`
 export const COMMAND_GRAPH_REFRESH = `${ID}.${GRAPH_VIEW}.refresh`
 
 export const COMMAND_SETTINGS = SETTINGS_PANEL_ID
+
+export const GRAPH_COLORS: string[] = [
+  'rgba(21, 160, 191, 1)',
+  'rgba(6, 105, 247, 1)',
+  'rgba(142, 0, 194, 1)',
+  'rgba(197, 23, 182, 1)',
+  'rgba(217, 1, 113, 1)',
+  'rgba(205, 1, 1, 1)',
+  'rgba(243, 93, 46, 1)',
+  'rgba(242, 202, 51, 1)',
+  'rgba(123, 217, 56, 1)',
+  'rgba(46, 206, 157, 1)',
+]

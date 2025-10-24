@@ -1,19 +1,48 @@
-import type { ExtensionMessage, PageMessage } from '@/types/data'
+import type { Config, ExtensionMessage, GraphState, PageMessage, State } from '@/types/data'
 import type { WebviewApi } from 'vscode-webview'
 
-export class Runtime<StateType = unknown> {
-  readonly #api: WebviewApi<StateType>
+class RuntimeState {
+  readonly #api: WebviewApi<State>
+  readonly #state: State
+
+  constructor(api: WebviewApi<State>) {
+    this.#api = api
+    this.#state = api.getState() || {}
+  }
+
+  get graph(): GraphState | undefined {
+    return this.#state.graph
+  }
+
+  set graph(state: GraphState) {
+    this.#state.graph = state
+    this.#api.setState(this.#state)
+  }
+}
+
+class Runtime {
+  readonly #api: WebviewApi<State>
+  readonly #state: RuntimeState
+  #config: Config
 
   constructor() {
-    this.#api = acquireVsCodeApi<StateType>()
+    const api = acquireVsCodeApi<State>()
+    this.#api = api
+    this.#state = new RuntimeState(api)
   }
 
-  getState(): StateType | undefined {
-    return this.#api.getState()
+  init(config: Config) {
+    if (!this.#config) {
+      this.#config = config
+    }
   }
 
-  setState<T extends StateType | undefined>(newState: T): T {
-    return this.#api.setState(newState)
+  get config(): Config {
+    return this.#config
+  }
+
+  get state(): RuntimeState {
+    return this.#state
   }
 
   onMessage(callback: (message: ExtensionMessage) => void): () => void {
@@ -31,3 +60,5 @@ export class Runtime<StateType = unknown> {
     this.#api.postMessage(message)
   }
 }
+
+export default new Runtime()

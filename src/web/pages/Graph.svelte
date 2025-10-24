@@ -1,44 +1,73 @@
 <script lang="ts">
-  import type { Commit, PanelState } from '@/types/data'
+  import type { Config, GitCommit, GitRef, GitRemote } from '@/types/data'
   import CommitDetail from '@web/components/CommitDetail.svelte'
   import CommitList from '@web/components/CommitList.svelte'
-  import { drag } from '@web/utils/drag'
-  import { Runtime } from '@web/utils/runtime'
-  import { tick } from 'svelte'
+  import { drag } from '@web/utils/event'
+  import runtime from '@web/utils/runtime'
+  import { onMount } from 'svelte'
 
-  export let runtime: Runtime<PanelState>
+  export let config: Config
 
-  let percent: {
-    aside: number
-  } = { aside: 20 }
-  let scrollTop: {
-    main: number
-    aside: number
-  } = { main: 0, aside: 0 }
+  runtime.init(config)
 
-  let commits: Commit[] = []
-  let commit: Commit = null
+  let scrollTop: number = 0
+  let sectionWidth: {
+    main: string
+    aside: string
+  } = { main: '80%', aside: '20%' }
+  let HEAD: string = ''
+  let branches: GitRef[] = []
+  let tags: GitRef[] = []
+  let remotes: GitRemote[] = []
+  let commits: GitCommit[] = []
+  let commit: GitCommit = null
+
+  function initState(): void {
+    const state = runtime.state.graph
+    if (state) {
+      scrollTop = state.scrollTop || 0
+      sectionWidth = state.sectionWidth || { main: '80%', aside: '20%' }
+      HEAD = state.HEAD || ''
+      branches = state.branches || []
+      tags = state.tags || []
+      remotes = state.remotes || []
+      commits = state.commits || []
+      commit = state.commit || null
+    } else {
+      runtime.sendMessage({
+        type: 'init',
+      })
+    }
+  }
 
   function setState(callback: () => void): void {
     callback()
-    runtime.setState({
-      percent,
+    runtime.state.graph = {
       scrollTop,
+      sectionWidth,
+      HEAD,
+      branches,
+      tags,
+      remotes,
       commits,
       commit,
-    })
+    }
   }
 
   runtime.onMessage((message) => {
     switch (message.type) {
-      case 'commits': {
+      case 'init': {
         setState(() => {
-          commits = message.data
+          const data = message.data
+          HEAD = data.HEAD
+          branches = data.branches
+          tags = data.tags
+          remotes = data.remotes
+          commits = data.commits
         })
         break
       }
       case 'refresh': {
-        window.scrollTo(0, 0)
         commits = []
         commit = null
         runtime.sendMessage({
@@ -55,113 +84,125 @@
     }
   })
 
-  let containerElement: HTMLElement
-  let mainElement: HTMLElement
-  let asideElemnt: HTMLElement
-
-  function scroll(e: Event) {
-    const element = e.currentTarget as HTMLElement
-    if (element === mainElement) {
-      setState(() => {
-        scrollTop.main = element.scrollTop
-      })
-    } else if (element === asideElemnt) {
-      setState(() => {
-        scrollTop.aside = element.scrollTop
-      })
-    }
+  function setScrollTop(value: number): void {
+    setState(() => {
+      scrollTop = value
+    })
   }
 
-  const dragSplitter = drag((e: MouseEvent) => {
+  const view: { left: number; width: number } = {
+    left: 0,
+    width: 0,
+  }
+
+  function setAsideWidth(e: MouseEvent) {
     const { clientX } = e
-    const { left, width } = containerElement.getBoundingClientRect()
-    let asidePercent = parseInt((((left + width - clientX) / width) * 100).toFixed())
-    if (asidePercent < 20) {
-      asidePercent = 20
-    } else if (asidePercent > 50) {
-      asidePercent = 50
+    const { left, width } = view
+    let percent = Math.round(((left + width - clientX) / width) * 10000) / 100
+    if (percent < 20) {
+      percent = 20
+    } else if (percent > 50) {
+      percent = 50
     }
     setState(() => {
-      percent.aside = asidePercent
+      sectionWidth = {
+        main: `${100 - percent}%`,
+        aside: `${percent}%`,
+      }
     })
-  })
+  }
 
-  function clickCommit({ detail: commit }: CustomEvent<Commit>) {
+  function selectCommit(hash: string) {
+    if (!hash) {
+      setState(() => {
+        commit = null
+      })
+      return
+    }
     runtime.sendMessage({
       type: 'get_commit',
       params: {
-        hash: commit.hash,
+        hash,
       },
     })
   }
 
-  const state = runtime.getState()
-  if (state) {
-    percent = state.percent || { aside: 20 }
-    scrollTop = state.scrollTop || { main: 0, aside: 0 }
-    commits = state.commits || []
-    commit = state.commit || null
-    tick().then(() => {
-      const { main, aside } = scrollTop
-      mainElement.scrollTop = main
-      if (commit) {
-        asideElemnt.scrollTop = aside
+  initState()
+
+  let element: HTMLElement
+
+  onMount(() => {
+    const observer = new ResizeObserver((entries: ResizeObserverEntry[]) => {
+      for (const entry of entries) {
+        const { left, width } = entry.contentRect
+        view.left = left
+        view.width = width
       }
     })
-  } else {
-    runtime.sendMessage({
-      type: 'init',
-    })
-  }
+    observer.observe(element)
+    return () => {
+      observer.disconnect()
+    }
+  })
 </script>
 
-<div bind:this={containerElement} class="container">
-  <main bind:this={mainElement} on:scroll={scroll}>
-    <CommitList {commits} on:click:commit={clickCommit}></CommitList>
+<div bind:this={element} class="container">
+  <main style:width={commit ? sectionWidth.main : '100%'}>
+    <CommitList
+      {HEAD}
+      {branches}
+      {tags}
+      {remotes}
+      {commits}
+      {scrollTop}
+      selected={commit?.hash ?? ''}
+      on:scroll={(e) => setScrollTop(e.detail)}
+      on:select={(e) => selectCommit(e.detail)} />
   </main>
   {#if commit}
-    <div role="button" tabindex={0} class="splitter" on:mousedown={dragSplitter} />
-    <aside bind:this={asideElemnt} on:scroll={scroll} style="flex: 0 0 {percent.aside}%">
-      <CommitDetail {commit}></CommitDetail>
+    <aside style:width={sectionWidth.aside}>
+      <div role="button" tabindex={0} class="splitter" on:mousedown={() => drag(setAsideWidth)} />
+      <div class="data"><CommitDetail {commit} /></div>
     </aside>
   {/if}
 </div>
 
 <style lang="scss">
+  :global(body) {
+    box-sizing: border-box;
+    width: 100vw;
+    height: 100vh;
+  }
+
   .container {
     display: flex;
-    height: 100vh;
-    overflow: hidden;
-    main {
-      flex: 1 1 auto;
+    height: 100%;
+    width: 100%;
+
+    > * {
+      display: inline-flex;
       height: 100%;
-      overflow-y: auto;
     }
+
     aside {
-      flex: 0 0 20%;
-      height: 100%;
-      overflow-y: auto;
-    }
+      .splitter {
+        position: relative;
+        cursor: ew-resize;
+        user-select: none;
+        width: 0;
+        height: 100%;
 
-    .splitter {
-      position: relative;
-      flex: 0 0 1px;
-      background: #c0c0c0;
-      cursor: col-resize;
-      user-select: none;
-
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: -4px;
-        right: -4px;
-        z-index: 1;
+        &::after {
+          content: '';
+          position: absolute;
+          width: 4px;
+          height: 100%;
+          z-index: 1;
+        }
       }
 
-      &:hover::before {
-        background: rgba(0, 0, 0, 0.05);
+      .data {
+        width: 100%;
       }
     }
   }

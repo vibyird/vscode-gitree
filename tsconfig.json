@@ -11,8 +11,8 @@
     "verbatimModuleSyntax": true,
     "baseUrl": "./src",
     "paths": {
-      "@/*": ["./*"],
-      "@web/*": ["web/*"]
+      "@web/*": ["web/*"],
+      "@/*": ["./*"]
     }
   }
 }

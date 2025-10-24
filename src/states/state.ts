@@ -1,5 +1,5 @@
 import { GRAPH_VIEW_ID, ID, NAME, SETTINGS_PANEL_ID } from '@/states/constants'
-import type { Config, PanelState } from '@/types/data'
+import type { Config, GraphState } from '@/types/data'
 import type { API, GitExtension, Repository } from '@/types/git'
 import { GitAPI } from '@/utils/git'
 import { PanelSerializer, Runtime, ViewProvider } from '@/utils/runtime'
@@ -129,7 +129,7 @@ export class State {
 
   #initPanels(subscriptions: Disposable[]): void {
     const panels = this.#panels
-    const settingsPanel = new PanelSerializer<PanelState>(
+    const settingsPanel = new PanelSerializer<GraphState>(
       (runtime: Runtime): SettingsView => new SettingsView(runtime),
       this,
     )
