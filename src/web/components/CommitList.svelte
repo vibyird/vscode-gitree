@@ -5,8 +5,7 @@
   import Vm from '@web/icons/Vm.svelte'
   import VmActive from '@web/icons/VmActive.svelte'
   import { keydown } from '@web/utils/event'
-  import runtime from '@web/utils/runtime'
-  import { formatDate } from '@web/utils/util'
+  import { formatDate, runtime } from '@web/utils/util'
   import { createEventDispatcher, onMount } from 'svelte'
 
   const config = runtime.config
@@ -400,6 +399,7 @@
                 class="layer-0"
                 role="row"
                 tabindex="0"
+                data-vscode-context={JSON.stringify({ webviewSection: 'commit', commit: item.branches[0].name })}
                 on:keydown={(e) => keydown(e, () => selectCommit(commit))}
                 on:click={() => selectCommit(commit)}
                 on:dblclick={() => cancelSelectCommit(commit)}>
@@ -457,6 +457,7 @@
         class:selected={selected && commit.hash === selected}
         role="row"
         tabindex="0"
+        data-vscode-context={JSON.stringify({ webviewSection: 'commit', commit: commit.hash })}
         on:keydown={(e) => keydown(e, () => selectCommit(commit))}
         on:click={() => selectCommit(commit)}
         on:dblclick={() => cancelSelectCommit(commit)}>

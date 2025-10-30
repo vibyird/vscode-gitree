@@ -18,6 +18,16 @@ export const COMMAND_GRAPH_REFRESH = `${ID}.${GRAPH_VIEW}.refresh`
 
 export const COMMAND_SETTINGS = SETTINGS_PANEL_ID
 
+export const COMMAND_CREATE_BRANCH = `${ID}.branch`
+
+export const COMMAND_CREATE_TAG = `${ID}.tag`
+
+export const COMMAND_RESET = `${ID}.reset`
+
+export const COMMAND_REBASE = `${ID}.rebase`
+
+export const COMMAND_MERGE = `${ID}.merge`
+
 export const GRAPH_COLORS: string[] = [
   'rgba(21, 160, 191, 1)',
   'rgba(6, 105, 247, 1)',

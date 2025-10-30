@@ -47,6 +47,16 @@
         "command": "gitree.settings",
         "title": "%gitree.settings%",
         "icon": "$(gear)"
+      },
+      {
+        "category": "Gitree",
+        "command": "gitree.branch",
+        "title": "%gitree.branch%"
+      },
+      {
+        "category": "Gitree",
+        "command": "gitree.tag",
+        "title": "%gitree.tag%"
       }
     ],
     "icons": {
@@ -62,13 +72,23 @@
       "view/title": [
         {
           "command": "gitree.graph.refresh",
-          "when": "view === gitree.graph",
+          "when": "view == gitree.graph",
           "group": "navigation@98"
         },
         {
           "command": "gitree.settings",
-          "when": "view === gitree.graph",
+          "when": "view == gitree.graph",
           "group": "navigation@99"
+        }
+      ],
+      "webview/context": [
+        {
+          "command": "gitree.branch",
+          "when": "webviewId == gitree.graph && webviewSection == commit"
+        },
+        {
+          "command": "gitree.tag",
+          "when": "webviewId == gitree.graph && webviewSection == commit"
         }
       ]
     },

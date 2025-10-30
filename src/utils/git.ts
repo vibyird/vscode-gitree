@@ -12,6 +12,10 @@ export class GitAPI {
     this.#repo = repo
   }
 
+  async createBranch(name: string, checkout: boolean, ref?: string): Promise<void> {
+    await this.#repo.createBranch(name, checkout, ref)
+  }
+
   async showRef(): Promise<{
     HEAD: string
     branches: GitRef[]

@@ -88,6 +88,6 @@ export interface GraphState {
   commit?: GitCommit
 }
 
-interface State {
+interface PageState {
   graph?: GraphState
 }

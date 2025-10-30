@@ -1,13 +1,13 @@
 import { NAME } from '@/states/constants'
-import { View } from '@/utils/view'
+import { Page } from '@/utils/util'
 import { l10n } from 'vscode'
 
-export default class extends View {
+export default class extends Page {
   get title(): string {
     return l10n.t(`${NAME} Settings`)
   }
 
-  get page(): string {
+  get path(): string {
     return 'Settings'
   }
 

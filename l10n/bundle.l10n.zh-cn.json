@@ -1,4 +1,6 @@
 {
+  "Yes": "是",
+  "No": "否",
   "Show Git Graph": "查看Git图形",
   "Gitree Settings": "Gitree设置",
   "Branch / Tag": "分支/标签",
@@ -8,5 +10,7 @@
   "Commit Date": "提交日期",
   "Hash": "哈希",
   "Commit Detail": "提交明细",
-  "There are no Git repositories in the current workspace.": "当前工作空间没有任何 Git 存储库。"
+  "There are no Git repositories in the current workspace.": "当前工作空间没有任何 Git 存储库。",
+  "Please provide a new branch name": "请提供新的分支名称",
+  "Please choose whether to checkout": "请选择是否签出"
 }

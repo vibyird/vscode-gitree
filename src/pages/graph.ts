@@ -1,15 +1,15 @@
 import { NAME } from '@/states/constants'
-import type { Runtime } from '@/utils/runtime'
-import { View } from '@/utils/view'
+import type { Runtime } from '@/utils/util'
+import { Page } from '@/utils/util'
 import type { Disposable } from 'vscode'
 import { l10n } from 'vscode'
 
-export default class extends View {
+export default class extends Page {
   get title(): string {
     return l10n.t(NAME)
   }
 
-  get page(): string {
+  get path(): string {
     return 'Graph'
   }
 

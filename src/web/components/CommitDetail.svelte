@@ -3,8 +3,7 @@
   import CommitFile from '@web/components/CommitFile.svelte'
   import ChevronRight from '@web/icons/ChevronRight.svelte'
   import { keydown } from '@web/utils/event'
-  import runtime from '@web/utils/runtime'
-  import { formatDate } from '@web/utils/util'
+  import { formatDate, runtime } from '@web/utils/util'
 
   const config = runtime.config
 

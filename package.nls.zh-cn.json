@@ -2,5 +2,7 @@
   "gitree.graph": "查看Git图形",
   "gitree.refresh": "刷新",
   "gitree.settings": "设置",
+  "gitree.branch": "创建分支",
+  "gitree.tag": "创建标签",
   "gitree.statusBar.showItem": "显示一个状态栏项，点击时打开Git图形。"
 }

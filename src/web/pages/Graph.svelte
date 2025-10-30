@@ -3,7 +3,7 @@
   import CommitDetail from '@web/components/CommitDetail.svelte'
   import CommitList from '@web/components/CommitList.svelte'
   import { drag } from '@web/utils/event'
-  import runtime from '@web/utils/runtime'
+  import { runtime } from '@web/utils/util'
   import { onMount } from 'svelte'
 
   export let config: Config
@@ -146,7 +146,10 @@
   })
 </script>
 
-<div bind:this={element} class="container">
+<div
+  bind:this={element}
+  class="container"
+  data-vscode-context={JSON.stringify({ preventDefaultContextMenuItems: true })}>
   <main style:width={commit ? sectionWidth.main : '100%'}>
     <CommitList
       {HEAD}
