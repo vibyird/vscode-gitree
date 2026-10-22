@@ -2,8 +2,6 @@ export const ID = 'gitree'
 
 export const NAME = 'Gitree'
 
-export const L10N = process.env.L10N
-
 export const GRAPH_VIEW = 'graph'
 
 export const SETTINGS_VIEW = 'settings'
@@ -27,6 +25,8 @@ export const COMMAND_RESET = `${ID}.reset`
 export const COMMAND_REBASE = `${ID}.rebase`
 
 export const COMMAND_MERGE = `${ID}.merge`
+
+export const GRAPH_ITEM_HEIGHT = 28
 
 export const GRAPH_COLORS: string[] = [
   'rgba(21, 160, 191, 1)',

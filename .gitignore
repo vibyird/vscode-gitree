@@ -156,7 +156,5 @@ dist
 .pnp.*
 
 # extension
-/assets/**/*.js
-/assets/**/*.css
-/assets/**/*.map
+/assets/pages/*
 /extension.js

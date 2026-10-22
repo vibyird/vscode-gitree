@@ -70,5 +70,11 @@
     "json",
     "jsonc",
     "svelte"
-  ]
+  ],
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    ".prettierrc.*": ".editorconfig, .prettierignore",
+    "package.json": "package-lock.json, package.nls*.json",
+    "vite.config.*": "svelte.config.*"
+  }
 }

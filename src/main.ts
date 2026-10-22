@@ -1,7 +1,7 @@
 import Commands from '@/commands/commands'
 import Pages from '@/pages/pages'
 import { NAME } from '@/states/constants'
-import State from '@/states/state'
+import States from '@/states/states'
 import { Subscription } from '@/utils/util'
 import type { Disposable, ExtensionContext, LogOutputChannel } from 'vscode'
 import { window } from 'vscode'
@@ -13,15 +13,15 @@ class Extension extends Subscription {
   }
 
   #init(context: ExtensionContext, logger: LogOutputChannel, subscriptions: Disposable[]): void {
-    const state = new State(context, logger)
-    const pages = new Pages(state)
-    const commands = new Commands(state, pages)
-    subscriptions.push(state, pages, commands)
+    const states = new States(context, logger)
+    const pages = new Pages(states)
+    const commands = new Commands(states, pages)
+    subscriptions.push(states, pages, commands)
   }
 }
 
 export function activate(context: ExtensionContext): void {
-  const logger: LogOutputChannel = window.createOutputChannel(NAME, { log: true })
+  const logger = window.createOutputChannel(NAME, { log: true })
   context.subscriptions.push(logger, new Extension(context, logger))
   logger.info('activated')
 }

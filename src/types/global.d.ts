@@ -1,7 +1,10 @@
 /// <reference types="svelte" />
+/// <reference types="vite/client" />
 
-export {}
+import type { Config } from '@/types/data'
 
 declare global {
-  var l10n: typeof import('@vscode/l10n')
+  var config: Config
 }
+
+export {}

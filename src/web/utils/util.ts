@@ -1,4 +1,4 @@
-import type { Config, ExtensionMessage, GraphState, PageMessage, PageState } from '@/types/data'
+import type { ExtensionMessage, PageMessage } from '@/types/data'
 import type { WebviewApi } from 'vscode-webview'
 
 export function formatDate(date: string, locale: string): string {
@@ -12,48 +12,20 @@ export function formatDate(date: string, locale: string): string {
   }).format(new Date(date))
 }
 
-class RuntimeState {
-  readonly #api: WebviewApi<PageState>
-  readonly #state: PageState
-
-  constructor(api: WebviewApi<PageState>) {
-    this.#api = api
-    this.#state = api.getState() || {}
-  }
-
-  get graph(): GraphState {
-    return this.#state.graph
-  }
-
-  set graph(state: GraphState) {
-    this.#state.graph = state
-    this.#api.setState(this.#state)
-  }
-}
-
-class Runtime {
-  readonly #api: WebviewApi<PageState>
-  readonly #state: RuntimeState
-  #config: Config
+export class Runtime<T> {
+  readonly #api: WebviewApi<T>
 
   constructor() {
-    const api = acquireVsCodeApi<PageState>()
+    const api = acquireVsCodeApi<T>()
     this.#api = api
-    this.#state = new RuntimeState(api)
   }
 
-  init(config: Config) {
-    if (!this.#config) {
-      this.#config = config
-    }
+  getState(): T | undefined {
+    return this.#api.getState()
   }
 
-  get config(): Config {
-    return this.#config
-  }
-
-  get state(): RuntimeState {
-    return this.#state
+  setState(state: T): T {
+    return this.#api.setState(state)
   }
 
   onMessage(callback: (message: ExtensionMessage) => void): () => void {
@@ -71,5 +43,3 @@ class Runtime {
     this.#api.postMessage(message)
   }
 }
-
-export const runtime = new Runtime()

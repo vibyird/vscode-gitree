@@ -16,21 +16,29 @@ export class GitAPI {
     await this.#repo.createBranch(name, checkout, ref)
   }
 
+  async createTag(name: string, upstream: string): Promise<void> {
+    await this.#repo.tag(name, upstream)
+  }
+
+  async deleteBranch(name: string, force?: boolean): Promise<void> {
+    await this.#repo.deleteBranch(name, force)
+  }
+
   async showRef(): Promise<{
     HEAD: string
     branches: GitRef[]
-    tags: GitRef[]
     remotes: {
       name: string
       HEAD: string
       branches: GitRef[]
     }[]
+    tags: GitRef[]
   }> {
     const output = await this.#exec('show-ref --head')
     let HEAD: string = ''
     const branches: GitRef[] = []
-    const tags: GitRef[] = []
     const remotes: { name: string; HEAD: string; branches: GitRef[] }[] = []
+    const tags: GitRef[] = []
     output
       .split(/\r?\n/)
       .filter(Boolean)
@@ -49,7 +57,11 @@ export class GitAPI {
             hash,
           })
         } else if (name.startsWith('refs/remotes/')) {
-          const [, remoteName, refName] = name.match(/^refs\/remotes\/([^/]+)\/(.+)$/)
+          const matches = name.match(/^refs\/remotes\/([^/]+)\/(.+)$/)
+          if (!matches) {
+            return
+          }
+          const [, remoteName, refName] = matches
           let remote = remotes.find((r) => r.name === remoteName)
           if (!remote) {
             remote = {
@@ -72,8 +84,8 @@ export class GitAPI {
     return {
       HEAD,
       branches,
-      tags,
       remotes,
+      tags,
     }
   }
 
@@ -165,7 +177,7 @@ export class GitAPI {
           cwd: this.#repo.rootUri.fsPath,
           encoding: 'utf-8',
         },
-        (error: ExecException | null, stdout: string, stderr: string): void => {
+        (error: ExecException | null, stdout: string): void => {
           if (error) {
             reject(error)
             return

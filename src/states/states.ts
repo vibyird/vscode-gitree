@@ -1,7 +1,7 @@
 import { ID } from '@/states/constants'
 import type { API, GitExtension, Repository } from '@/types/git'
 import { GitAPI } from '@/utils/git'
-import { Subscription } from '@/utils/util'
+import { States } from '@/utils/util'
 import type {
   ConfigurationChangeEvent,
   ConfigurationScope,
@@ -12,30 +12,17 @@ import type {
 } from 'vscode'
 import { EventEmitter, extensions, workspace } from 'vscode'
 
-export default class extends Subscription {
-  readonly #context: ExtensionContext
-  readonly #logger: LogOutputChannel
-
+export default class extends States {
   readonly #gitAPI: API
   readonly #configChangeEventEmitter: EventEmitter<ConfigurationChangeEvent>
   #config: WorkspaceConfiguration
 
   constructor(context: ExtensionContext, logger: LogOutputChannel) {
-    super()
-    this.#context = context
-    this.#logger = logger
-    this.#gitAPI = extensions.getExtension<GitExtension>('vscode.git').exports.getAPI(1)
+    super(context, logger)
+    this.#gitAPI = extensions.getExtension<GitExtension>('vscode.git')!.exports.getAPI(1)
     this.#configChangeEventEmitter = new EventEmitter<ConfigurationChangeEvent>()
     this.#config = workspace.getConfiguration(ID)
     this.#init(this.subscriptions)
-  }
-
-  get context(): ExtensionContext {
-    return this.#context
-  }
-
-  get logger(): LogOutputChannel {
-    return this.#logger
   }
 
   get repositories(): Repository[] {
@@ -52,17 +39,25 @@ export default class extends Subscription {
 
   onDidChangeConfiguration(
     listener: (event: ConfigurationChangeEvent) => void,
-    thisArgs?: any,
+    thisArgs?: unknown,
     disposables?: Disposable[],
   ): Disposable {
     return this.#configChangeEventEmitter.event(listener, thisArgs, disposables)
   }
 
-  onDidOpenRepository(listener: (repo: Repository) => void, thisArgs?: any, disposables?: Disposable[]): Disposable {
+  onDidOpenRepository(
+    listener: (repo: Repository) => void,
+    thisArgs?: unknown,
+    disposables?: Disposable[],
+  ): Disposable {
     return this.#gitAPI.onDidOpenRepository(listener, thisArgs, disposables)
   }
 
-  onDidCloseRepository(listener: (repo: Repository) => void, thisArgs?: any, disposables?: Disposable[]): Disposable {
+  onDidCloseRepository(
+    listener: (repo: Repository) => void,
+    thisArgs?: unknown,
+    disposables?: Disposable[],
+  ): Disposable {
     return this.#gitAPI.onDidCloseRepository(listener, thisArgs, disposables)
   }
 

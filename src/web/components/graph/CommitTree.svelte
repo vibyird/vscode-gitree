@@ -1,7 +1,8 @@
 <script lang="ts">
+  import { GRAPH_COLORS } from '@/states/constants'
+
   interface Ref {
     index: number
-    color: string
     inited: boolean
     continued: boolean
     branched: boolean
@@ -30,13 +31,14 @@
   {#each refs as ref (ref.index)}
     {@const x2 = (0.5 + ref.index) * w}
     {@const dasharray = ref.stash ? 2 : 0}
+    {@const color = GRAPH_COLORS[ref.index % GRAPH_COLORS.length]}
     <g
       fill="none"
       shape-rendering="auto"
       stroke-linejoin="round"
       stroke-dasharray={dasharray}
       stroke-width="2"
-      stroke={ref.color}>
+      stroke={color}>
       <!-- Draw lines to show ref and commit relationship. -->
       {#if ref.branched}
         {#if ref.index > index}
@@ -66,7 +68,7 @@
     </g>
     {#if ref.index === index}
       <!-- Draw commit node. -->
-      <circle cx={x2} cy={h / 2} r="6" fill={ref.color} />
+      <circle cx={x2} cy={h / 2} r="6" fill={color} />
     {/if}
   {/each}
 </svg>

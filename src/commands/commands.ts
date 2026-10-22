@@ -1,16 +1,17 @@
+import GitCommand from '@/commands/git'
 import ViewCommand from '@/commands/view'
 import Pages from '@/pages/pages'
-import State from '@/states/state'
-import { Component } from '@/utils/util'
+import States from '@/states/states'
+import { Subscription } from '@/utils/util'
 import type { Disposable } from 'vscode'
 
-export default class extends Component {
-  constructor(state: State, pages: Pages) {
-    super(state)
-    this.#init(this.subscriptions, state, pages)
+export default class extends Subscription {
+  constructor(states: States, pages: Pages) {
+    super()
+    this.#init(this.subscriptions, states, pages)
   }
 
-  #init(subscriptions: Disposable[], state: State, pages: Pages): void {
-    subscriptions.push(new ViewCommand(state, pages))
+  #init(subscriptions: Disposable[], states: States, pages: Pages): void {
+    subscriptions.push(new ViewCommand(states, pages), new GitCommand(states))
   }
 }

@@ -1,14 +1,15 @@
 import { NAME } from '@/states/constants'
-import { Page } from '@/utils/util'
+import type States from '@/states/states'
+import { Page } from '@/utils/page'
 import { l10n } from 'vscode'
 
-export default class extends Page {
-  get title(): string {
-    return l10n.t(`${NAME} Settings`)
+export default class extends Page<States> {
+  get name(): string {
+    return 'settings'
   }
 
-  get path(): string {
-    return 'Settings'
+  get title(): string {
+    return l10n.t(`${NAME} Settings`)
   }
 
   protected init(): void {}

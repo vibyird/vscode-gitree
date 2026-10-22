@@ -1,51 +1,83 @@
+import GitService from '@/services/git'
 import { NAME } from '@/states/constants'
-import type { Runtime } from '@/utils/util'
-import { Page } from '@/utils/util'
+import type States from '@/states/states'
+import type { Runtime } from '@/utils/page'
+import { Page } from '@/utils/page'
 import type { Disposable } from 'vscode'
 import { l10n } from 'vscode'
 
-export default class extends Page {
+export default class extends Page<States> {
+  #git: GitService
+
+  constructor(runtime: Runtime<States>) {
+    super(runtime)
+    this.#git = new GitService(this.states)
+  }
+
+  get name(): string {
+    return 'graph'
+  }
+
   get title(): string {
     return l10n.t(NAME)
   }
 
-  get path(): string {
-    return 'Graph'
-  }
-
-  protected init(subscriptions: Disposable[], runtime: Runtime): void {
+  protected init(subscriptions: Disposable[], runtime: Runtime<States>): void {
     subscriptions.push(
+      this.states.onDidOpenRepository(() => {
+        const data = this.#git.changeRepository()
+        this.runtime.sendMessage({
+          type: 'change-repository',
+          data,
+        })
+      }),
+      this.states.onDidCloseRepository(() => {
+        const data = this.#git.changeRepository()
+        this.runtime.sendMessage({
+          type: 'change-repository',
+          data,
+        })
+      }),
       runtime.onMessage(async (message) => {
         switch (message.type) {
           case 'init': {
-            const { HEAD, branches, tags, remotes } = await this.state.git.showRef()
-            const stashes = await this.state.git.showStashList()
-            const commits = await this.state.git.log({
-              stashes,
-            })
+            const data = await this.#git.getCommits()
             this.runtime.sendMessage({
-              type: 'init',
+              type: 'inited',
+              data,
+            })
+            break
+          }
+          case 'get_commits': {
+            const { sequenceId, start, end } = message.params
+            const data = await this.#git.getCommits({ start, end })
+            this.runtime.sendMessage({
+              type: 'commits',
               data: {
-                HEAD,
-                branches,
-                tags,
-                remotes,
-                commits,
+                sequenceId,
+                ...data,
               },
             })
             break
           }
           case 'get_commit': {
             const { hash } = message.params
-            const commit = await this.state.git.show(hash)
+            const data = await this.#git.getCommit({ hash })
             this.runtime.sendMessage({
               type: 'commit',
-              data: commit,
+              data,
             })
             break
           }
         }
       }),
     )
+  }
+
+  async refresh(): Promise<void> {
+    this.#git.clearCache()
+    this.runtime.sendMessage({
+      type: 'refresh',
+    })
   }
 }
